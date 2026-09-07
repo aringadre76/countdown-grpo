@@ -9,6 +9,7 @@ witness expressions in prompts or training examples.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cache, lru_cache
 from itertools import combinations
 
 
@@ -17,6 +18,43 @@ class OracleResult:
     solvable: bool
     witness: str | None = None
     reachable_count: int = 0
+
+
+@lru_cache(maxsize=16_384)
+def _reachable_integer_values(numbers: tuple[int, ...]) -> frozenset[int]:
+    """Fast value-only dynamic program used by large dataset audits.
+
+    The state contains only valid integer partial results. It is independent
+    from the parser and has no witness strings to accidentally expose during
+    dataset preparation.
+    """
+
+    @cache
+    def search(values: tuple[int, ...]) -> frozenset[int]:
+        if len(values) == 1:
+            return frozenset(values)
+        found: set[int] = set()
+        for left_index, right_index in combinations(range(len(values)), 2):
+            left_value = values[left_index]
+            right_value = values[right_index]
+            remaining = tuple(
+                value for index, value in enumerate(values) if index not in {left_index, right_index}
+            )
+            operations = {
+                left_value + right_value,
+                left_value * right_value,
+                left_value - right_value,
+                right_value - left_value,
+            }
+            if right_value != 0 and left_value % right_value == 0:
+                operations.add(left_value // right_value)
+            if left_value != 0 and right_value % left_value == 0:
+                operations.add(right_value // left_value)
+            for result in operations:
+                found.update(search(tuple(sorted((*remaining, result)))))
+        return frozenset(found)
+
+    return search(tuple(sorted(numbers)))
 
 
 def reachable_values(nums: list[int]) -> dict[int, str]:
@@ -61,6 +99,14 @@ def reachable_values(nums: list[int]) -> dict[int, str]:
 
 def solve_countdown(nums: list[int], target: int, *, include_witness: bool = True) -> OracleResult:
     """Determine solvability without supplying a solution to any model prompt."""
+
+    if not include_witness:
+        values = _reachable_integer_values(tuple(sorted(int(number) for number in nums)))
+        return OracleResult(
+            solvable=int(target) in values,
+            witness=None,
+            reachable_count=len(values),
+        )
 
     values = reachable_values(nums)
     return OracleResult(

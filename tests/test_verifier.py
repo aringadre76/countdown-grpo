@@ -87,6 +87,10 @@ def test_oracle_witnesses_are_accepted_by_independent_verifier():
     verdict = verify_expression(result.witness, 15, nums)
     assert verdict.valid
     assert result.reachable_count == len(reachable_values(nums))
+    audit_result = solve_countdown(nums, 15, include_witness=False)
+    assert audit_result.solvable
+    assert audit_result.witness is None
+    assert audit_result.reachable_count == result.reachable_count
 
 
 def test_oracle_handles_duplicate_inputs_and_unsolvable_targets():

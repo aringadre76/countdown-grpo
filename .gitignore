@@ -13,6 +13,9 @@ outputs/
 checkpoints/
 wandb/
 mlruns/
+artifacts/data/source_train.jsonl
+artifacts/data/source_dev.jsonl
+artifacts/data/source_test.jsonl
 *.safetensors
 *.bin
 *.pt
