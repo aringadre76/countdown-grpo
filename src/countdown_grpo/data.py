@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datasets import Dataset, load_dataset
 
-
 DATASET_ID = "Jiayi-Pan/Countdown-Tasks-3to4"
 
 

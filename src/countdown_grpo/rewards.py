@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from .verifier import extract_expression, verify_expression
+from .verifier import verify_completion
 
 
 def _completion_text(completion: object) -> str:
@@ -27,7 +27,6 @@ def countdown_reward(
 
     rewards: list[float] = []
     for completion, task_target, task_nums in zip(completions, target, nums, strict=True):
-        expression = extract_expression(_completion_text(completion))
-        result = verify_expression(expression, int(task_target), list(task_nums))
+        result = verify_completion(_completion_text(completion), int(task_target), list(task_nums))
         rewards.append(1.0 if result.valid else 0.0)
     return rewards

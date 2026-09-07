@@ -11,7 +11,6 @@ from trl import GRPOConfig, GRPOTrainer
 from .data import load_countdown
 from .rewards import countdown_reward
 
-
 DEFAULT_MODEL = "Qwen/Qwen3.5-0.8B-Base"
 
 

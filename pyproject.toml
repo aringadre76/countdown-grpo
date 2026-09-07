@@ -10,19 +10,20 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Arin Gadre" }]
-dependencies = [
-  "accelerate>=1.0",
-  "datasets>=3.0",
-  "peft>=0.14",
-  "torch>=2.4",
-  "transformers>=4.48",
-  "trl>=0.15",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
   "ruff>=0.8",
+]
+train = [
+  "accelerate==1.14.0",
+  "datasets==5.0.1",
+  "peft==0.20.0",
+  "torch==2.14.0",
+  "transformers==5.16.1",
+  "trl==1.12.0",
 ]
 
 [tool.setuptools.packages.find]
