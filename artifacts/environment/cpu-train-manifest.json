@@ -1,0 +1,63 @@
+{
+  "captured_at": "2026-09-07T06:09:30.024472+00:00",
+  "cpu": {
+    "command": [
+      "lscpu"
+    ],
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "Architecture:                         x86_64\nCPU op-mode(s):                       32-bit, 64-bit\nAddress sizes:                        46 bits physical, 48 bits virtual\nByte Order:                           Little Endian\nCPU(s):                               6\nOn-line CPU(s) list:                  0-5\nVendor ID:                            GenuineIntel\nModel name:                           12th Gen Intel(R) Core(TM) i7-12700K\nCPU family:                           6\nModel:                                151\nThread(s) per core:                   2\nCore(s) per socket:                   3\nSocket(s):                            1\nStepping:                             2\nBogoMIPS:                             7219.19\nFlags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nVirtualization:                       VT-x\nHypervisor vendor:                    Microsoft\nVirtualization type:                  full\nL1d cache:                            144 KiB (3 instances)\nL1i cache:                            96 KiB (3 instances)\nL2 cache:                             3.8 MiB (3 instances)\nL3 cache:                             25 MiB (1 instance)\nVulnerability Gather data sampling:   Not affected\nVulnerability Itlb multihit:          Not affected\nVulnerability L1tf:                   Not affected\nVulnerability Mds:                    Not affected\nVulnerability Meltdown:               Not affected\nVulnerability Mmio stale data:        Not affected\nVulnerability Reg file data sampling: Mitigation; Clear Register File\nVulnerability Retbleed:               Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:   Not affected\nVulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl and seccomp\nVulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:             Mitigation; Enhanced / Automatic IBRS; IBPB conditional; RSB filling; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S\nVulnerability Srbds:                  Not affected\nVulnerability Tsx async abort:        Not affected"
+  },
+  "dependencies": {
+    "accelerate": "1.14.0",
+    "bitsandbytes": null,
+    "datasets": "5.0.1",
+    "peft": "0.20.0",
+    "torch": "2.14.0+cpu",
+    "transformers": "5.16.1",
+    "trl": "1.12.0"
+  },
+  "gpu_probes": [
+    {
+      "command": [
+        "rocm-smi"
+      ],
+      "returncode": 0,
+      "stderr": "ERROR:root:Driver not initialized (amdgpu not found in modules)",
+      "stdout": ""
+    },
+    {
+      "command": [
+        "nvidia-smi"
+      ],
+      "returncode": null,
+      "stderr": "[Errno 2] No such file or directory: 'nvidia-smi'",
+      "stdout": ""
+    }
+  ],
+  "machine": "x86_64",
+  "named_llama_processes": {
+    "command": [
+      "pgrep",
+      "-af",
+      "llama.*server"
+    ],
+    "returncode": 1,
+    "stderr": "",
+    "stdout": ""
+  },
+  "os": {
+    "release": "5.15.167.4-microsoft-standard-WSL2",
+    "system": "Linux",
+    "version": "#1 SMP Tue Nov 5 00:21:55 UTC 2024"
+  },
+  "python": "3.11.15",
+  "relevant_environment_variable_names": [],
+  "torch": {
+    "cuda_available": false,
+    "cuda_version": null,
+    "device_count": 0,
+    "hip_version": null,
+    "version": "2.14.0+cpu"
+  }
+}

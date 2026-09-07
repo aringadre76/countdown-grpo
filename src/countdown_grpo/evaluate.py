@@ -85,7 +85,7 @@ def summarise_records(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _load_model(model_id: str, revision: str | None, device: str):
+def _load_model(model_id: str, revision: str | None, device: str, adapter_path: str | None):
     try:
         import torch
         from huggingface_hub import HfApi
@@ -103,9 +103,16 @@ def _load_model(model_id: str, revision: str | None, device: str):
     model = AutoModelForImageTextToText.from_pretrained(
         model_id,
         revision=resolved_revision,
-        torch_dtype=dtype,
+        dtype=dtype,
         low_cpu_mem_usage=True,
-    ).to(torch_device)
+    )
+    if adapter_path is not None:
+        try:
+            from peft import PeftModel
+        except ImportError as error:  # pragma: no cover - optional runtime dependency.
+            raise RuntimeError("Install the project train extra before loading an adapter") from error
+        model = PeftModel.from_pretrained(model, adapter_path)
+    model = model.to(torch_device)
     model.eval()
     return model, tokenizer, torch, torch_device, resolved_revision
 
@@ -143,6 +150,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--revision", default=None)
+    parser.add_argument("--adapter-path", default=None, help="Optional local LoRA adapter to compare with base")
     parser.add_argument("--data-dir", type=Path, default=Path("artifacts/data"))
     parser.add_argument("--splits", nargs="+", default=["source_test", "fresh_test"])
     parser.add_argument("--output", type=Path, required=True)
@@ -160,7 +168,9 @@ def main() -> None:
     if args.samples_per_task < 1:
         raise ValueError("samples_per_task must be positive")
 
-    model, tokenizer, torch, device, resolved_revision = _load_model(args.model, args.revision, args.device)
+    model, tokenizer, torch, device, resolved_revision = _load_model(
+        args.model, args.revision, args.device, args.adapter_path
+    )
     from transformers import set_seed
 
     records: list[dict[str, Any]] = []
@@ -216,6 +226,7 @@ def main() -> None:
                             "completion_length": completion_length,
                             "truncation": truncated,
                             "model_id": args.model,
+                            "adapter_path": args.adapter_path,
                             "revision": resolved_revision,
                             "generation_mode": generation_mode,
                             "generation_config": {
@@ -244,6 +255,7 @@ def main() -> None:
             "experiment_id": args.experiment_id,
             "model_id": args.model,
             "revision": resolved_revision,
+            "adapter_path": args.adapter_path,
             "output_jsonl": str(args.output),
             "git_commit": git_commit,
         }

@@ -1,0 +1,26 @@
+{
+  "dataset_rows": 8,
+  "device": "cpu",
+  "effective_generation_batch_size": 8,
+  "experiment_id": "qwen35-08b-base-cpu-smoke-s42-retry",
+  "git_commit": "4d6762bec4ddff119106d01a345dc0a8f5a5b387",
+  "gradient_accumulation_steps": 8,
+  "maximum_observed_prompt_tokens": 71,
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "num_generations": 4,
+  "per_device_train_batch_size": 1,
+  "revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "reward": "binary exact Countdown verifier only",
+  "seed": 42,
+  "target_modules": [
+    "in_proj_qkv",
+    "in_proj_z",
+    "out_proj",
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj"
+  ],
+  "timestamp": "2026-09-07T06:04:15.617785+00:00",
+  "train_file": "artifacts/data/smoke_train.jsonl"
+}

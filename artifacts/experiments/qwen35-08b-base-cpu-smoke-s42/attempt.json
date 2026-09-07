@@ -1,0 +1,31 @@
+{
+  "command": [
+    "/home/robot/countdown-grpo/.venv/bin/python",
+    "-m",
+    "countdown_grpo.train_grpo",
+    "--model",
+    "Qwen/Qwen3.5-0.8B-Base",
+    "--revision",
+    "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "--data-dir",
+    "artifacts/data",
+    "--train-file",
+    "smoke_train.jsonl",
+    "--max-steps",
+    "1",
+    "--max-completion-length",
+    "16",
+    "--output-dir",
+    "outputs/qwen35-08b-grpo-cpu-smoke",
+    "--experiment-id",
+    "qwen35-08b-base-cpu-smoke-s42",
+    "--evidence-dir",
+    "artifacts/experiments/qwen35-08b-base-cpu-smoke-s42",
+    "--seed",
+    "42",
+    "--allow-cpu"
+  ],
+  "error": "GRPOConfig.__init__() got an unexpected keyword argument 'max_prompt_length'",
+  "error_type": "TypeError",
+  "status": "failed"
+}
