@@ -16,6 +16,7 @@ mlruns/
 artifacts/data/source_train.jsonl
 artifacts/data/source_dev.jsonl
 artifacts/data/source_test.jsonl
+artifacts/rechecks/*/data/
 *.safetensors
 *.bin
 *.pt

@@ -1,0 +1,33 @@
+{
+  "command": [
+    "/home/robot/countdown-grpo/.venv/bin/python",
+    "-m",
+    "countdown_grpo.train_grpo",
+    "--model",
+    "Qwen/Qwen3.5-0.8B-Base",
+    "--revision",
+    "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "--data-dir",
+    "artifacts/rechecks/2026-09-08/data",
+    "--train-file",
+    "smoke_train.jsonl",
+    "--max-steps",
+    "1",
+    "--max-completion-length",
+    "16",
+    "--seed",
+    "42",
+    "--allow-cpu",
+    "--output-dir",
+    "outputs/qwen35-08b-grpo-cpu-recheck",
+    "--evidence-dir",
+    "artifacts/rechecks/2026-09-08/grpo",
+    "--experiment-id",
+    "qwen35-08b-base-cpu-smoke-recheck-s42"
+  ],
+  "finished_at": "2026-09-08T17:23:44.894708+00:00",
+  "global_step": 1,
+  "started_at": "2026-09-08T17:23:22.399386+00:00",
+  "status": "completed",
+  "training_loss": 0.0
+}

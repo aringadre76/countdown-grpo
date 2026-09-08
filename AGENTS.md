@@ -1,7 +1,7 @@
 # Agent instructions
 
 Status: Current
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 
 This file is the operational contract for Codex, Cursor, and other coding
 agents working in this repository. After context compaction, a long GPU step,
@@ -18,6 +18,24 @@ Do not paste the full protocol into `/goal`. The goal string must stay under
 - Local path: `/home/robot/countdown-grpo`
 - Work only in this repository. Do not create another repository.
 - Preserve unrelated files and Git history. Do not force-push.
+
+## Documentation routing
+
+Read [`docs/README.md`](docs/README.md) before changing project prose. It maps
+each document to one purpose.
+
+- `README.md` is the concise public summary. It must match saved evidence.
+- `docs/experiment-protocol.md` locks the research design and gate rules.
+- `docs/reproduction.md` is the command-level rerun guide.
+- `docs/hardware.md` distinguishes the intended RX 7900 XTX from what the
+  recorded WSL environment actually observed.
+- `docs/lessons.md` contains durable implementation and experiment lessons.
+- `docs/next-steps.md` contains the gated follow-up plan.
+- `CHANGELOG.md` records intentional project changes.
+
+Artifacts, not Markdown prose, are the source of truth for counts, commands,
+versions, hardware probes, completions, and metrics. Keep original evidence
+immutable; write any rerun to a new directory under `artifacts/rechecks/`.
 
 ## Research question
 

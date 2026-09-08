@@ -1,0 +1,28 @@
+{
+  "adapter_weights_changed_after_optimizer_step": true,
+  "base_parameter_count": 852985920,
+  "device": "cpu",
+  "forward_logits_shape": [
+    1,
+    18,
+    248320
+  ],
+  "lora_target_modules": [
+    "in_proj_qkv",
+    "in_proj_z",
+    "out_proj",
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj"
+  ],
+  "matched_lora_modules": 78,
+  "model_class": "Qwen3_5ForConditionalGeneration",
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "module_count": 517,
+  "one_token_generation": " ",
+  "revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "synthetic_backward_loss": 2.2780630588531494,
+  "timestamp": "2026-09-08T17:20:37.253391+00:00",
+  "trainable_parameter_count": 1228800
+}

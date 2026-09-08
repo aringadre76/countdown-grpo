@@ -1,53 +1,92 @@
-# Testing the Lower Bound of RLVR: GRPO on Countdown with Qwen3.5-0.8B
+# Testing GRPO at the Countdown Lower Bound
 
-This repository tests whether [`Qwen/Qwen3.5-0.8B-Base`](https://huggingface.co/Qwen/Qwen3.5-0.8B-Base), with no supervised Countdown solutions, can improve held-out Countdown solving through TRL GRPO and one binary exact reward. It is a small-model lower-bound experiment motivated by [TinyZero](https://github.com/Jiayi-Pan/TinyZero), which reported a failure at Qwen2.5-0.5B and used a stronger 3B setup.
+This is a small, reproducible RLVR experiment: can
+[`Qwen/Qwen3.5-0.8B-Base`](https://huggingface.co/Qwen/Qwen3.5-0.8B-Base)
+improve at Countdown arithmetic with TRL GRPO and a binary exact reward, but
+without supervised Countdown solutions? It is motivated by
+[TinyZero](https://github.com/Jiayi-Pan/TinyZero), which found that a smaller
+Qwen base model did not learn the task and used a stronger 3B setup.
 
-Current evidence is a valid negative/incomplete result: the end-to-end CPU fallback works, but no usable GRPO signal appeared. This does not support a claim of improved arithmetic search or general reasoning.
+## Current result
 
-## Result at a glance
+The completed run is a CPU fallback integration test, not a GPU training
+result. It produced no rewarded rollout groups, so I stopped after one GRPO
+step rather than turning a zero-signal run into a longer story.
 
-| Evidence | Source held-out | Fresh solvable tasks | Interpretation |
+| Run | Source held-out | Fresh tasks | What it shows |
 | --- | ---: | ---: | --- |
-| Untouched base, greedy plus sampled pass@4 | 0 / 40 exact | 0 / 40 exact | No legal expression in the bounded baseline. |
-| One-step LoRA GRPO smoke adapter, paired settings | 0 / 40 exact | 0 / 40 exact | Exactly identical scored completions to the base run. |
+| Untouched base | 0 / 40 exact | 0 / 40 exact | No legal solution in this bounded evaluation. |
+| One-step LoRA GRPO adapter | 0 / 40 exact | 0 / 40 exact | Identical scored completions to the base evaluation. |
 
-The frozen evaluation used eight tasks from each suite, one greedy and four sampled completions per task, a 16-token cap, seed 42, and model revision `dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68`. It is deliberately a bounded CPU evaluation, not a full 44,957-task held-out run.
+The evaluation used eight source-held-out and eight fresh tasks, one greedy
+completion and four samples per task, a 16-token cap, and seed 42. That is a
+bounded CPU measurement, not a result on all 44,957 held-out source tasks.
 
-The one-step smoke used the same base checkpoint, LoRA, and primary reward. Its eight rollouts had mean reward `0.0`, reward variance `0.0`, mixed-reward-group rate `0.0`, all-zero-group rate `1.0`, and gradient norm `0.0`. The protocol therefore forbids treating it as learning evidence and we did not start the 25–100-step diagnostic.
+The smoke had mean reward 0.0, reward variance 0.0, a mixed-reward-group rate
+of 0.0, an all-zero-group rate of 1.0, and gradient norm 0.0. One completed
+optimizer step confirms that the model, adapter, reward callback, and trainer
+can run together; it does not show learning. The full generated
+[evidence report](reports/experiment-report.md) and
+[plot](plots/experiment-summary.svg) are derived from saved artifacts only.
 
-Full generated report: [reports/experiment-report.md](reports/experiment-report.md). The plot is generated only from saved artifacts: [plots/experiment-summary.svg](plots/experiment-summary.svg).
+On 2026-09-08, the complete bounded CPU path was rerun after the evaluator and
+logging cleanup. The new base and adapter evaluations each had 80 records with
+stable scored fields identical to the original JSONL, including every raw
+completion, verifier verdict, reward, and failure category. The fresh
+[recheck report](artifacts/rechecks/2026-09-08/report.md) and
+[environment manifest](artifacts/rechecks/2026-09-08/environment.json) are
+kept alongside the original evidence.
 
-## Locked task and reward
+## Experiment design
 
-The core task accepts only binary `+`, `-`, `*`, `/`, and parentheses. Every supplied input number must be used exactly once as a multiset; all intermediate and final values must be integers; evaluation is exact rational arithmetic. Unary minus, `**`, `%`, `//`, concatenation, names, calls, prose, division by zero, and malformed tags are rejected. The verifier never evaluates generated text as Python.
+The core run is intentionally narrow:
 
-The sole primary reward is `1.0` for a legal expression that reaches the target and `0.0` otherwise. Formatting, legality, and parser diagnostics are logged but never shape this reward. The scorer uses the last well-formed `<answer>...</answer>` span; without an answer tag, the whole completion must itself be a legal expression.
+- Base checkpoint only: `Qwen/Qwen3.5-0.8B-Base` at revision
+  `dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68`.
+- No Countdown SFT data, hidden solution demonstrations, instruct checkpoint,
+  shaped reward, or test-set tuning.
+- Reward is exactly `1.0` for a legal solution and `0.0` otherwise.
+- The verifier accepts only binary `+`, `-`, `*`, `/`, and parentheses. It
+  requires every supplied number exactly once and integer intermediate/final
+  values, using exact rational arithmetic. It never evaluates model text as
+  Python.
+- An independent exhaustive oracle checks solvability but never writes a
+  witness into a prompt or task record.
 
-## Data integrity
+The source is
+[`Jiayi-Pan/Countdown-Tasks-3to4`](https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4)
+at revision `408f70d177020686d34a56bba5952feb45aaaee4`. Canonicalizing by
+`(target, sorted nums)` left 449,570 tasks from 490,364 rows; 40,794
+cross-order duplicates were removed. The oracle found every canonical source
+task solvable under the locked contract. Seed 42 produced 359,656 train,
+44,957 dev, and 44,957 final test tasks. A separate 256-task fresh suite is
+oracle-checked and deduplicated against the source splits. The split hashes
+are in [artifacts/data/source_split_manifest.json](artifacts/data/source_split_manifest.json).
 
-The source is [`Jiayi-Pan/Countdown-Tasks-3to4`](https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4) at revision `408f70d177020686d34a56bba5952feb45aaaee4`.
+## What actually ran
 
-- 490,364 source rows became 449,570 canonical `(target, sorted nums)` tasks.
-- 40,794 cross-order canonical duplicates were removed; exact ordered duplicate rows were zero.
-- The independent integer-only oracle found all 449,570 canonical tasks solvable.
-- Seed 42 created 359,656 train, 44,957 dev, and 44,957 final source-held-out tasks. Their canonical-key hashes are saved in [artifacts/data/source_split_manifest.json](artifacts/data/source_split_manifest.json).
-- A separate 256-task fresh suite is generated independently, oracle-checked, and deduplicated against every source split. Oracle witnesses are never written to prompts or task artifacts.
+The recorded environment used Python 3.11.15, Torch `2.14.0+cpu`, Accelerate
+1.14.0, Datasets 5.0.1, Transformers 5.16.1, TRL 1.12.0, and PEFT 0.20.0.
+[`rocm-smi`](artifacts/environment/cpu-train-manifest.json) reported that the
+AMD driver was not initialized; CUDA was unavailable. The CPU wheel was an
+explicit fallback, not a substitute for the intended RX 7900 XTX run.
 
-The large transformed train/dev/test JSONL cache is intentionally ignored instead of committed. Its source revision, construction code, counts, and SHA-256 hashes are committed, so the split can be rebuilt without committing redundant source data.
+Before GRPO, the live base model loaded as `Qwen3_5ForConditionalGeneration`
+with 852,985,920 parameters. Text forward pass, generation, LoRA attachment,
+backpropagation, and a synthetic optimizer update all worked. LoRA targets
+were selected from the live module tree and include the hybrid model's
+`in_proj_qkv`, `in_proj_z`, and `out_proj` linear-attention projections as
+well as `q_proj`, `k_proj`, `v_proj`, and `o_proj`. The observed details are
+in [artifacts/experiments/qwen35-08b-base-cpu-preflight.json](artifacts/experiments/qwen35-08b-base-cpu-preflight.json).
 
-## What ran
+TRL 1.12's generation batch is 8 (`1 × 8`) and is divisible by the configured
+four generations per prompt. The runner checks this before constructing the
+trainer.
 
-The actual CPU fallback environment was Python 3.11.15, Torch `2.14.0+cpu`, Accelerate 1.14.0, Datasets 5.0.1, Transformers 5.16.1, TRL 1.12.0, and PEFT 0.20.0. The full observed manifest is [artifacts/environment/cpu-train-manifest.json](artifacts/environment/cpu-train-manifest.json).
+## Reproduce the saved CPU fallback
 
-`rocm-smi` reported `Driver not initialized (amdgpu not found in modules)`; CUDA was unavailable and no named llama server was running. A generic PyPI Torch install began resolving CUDA 13 components, so it was stopped before completion. The actual fallback used the official CPU wheel, explicitly labeled as CPU rather than pretending it was the intended AMD GPU run.
-
-Before GRPO, the live base model loaded as `Qwen3_5ForConditionalGeneration` with 852,985,920 base parameters. Text forward and generation worked; a synthetic LoRA backward/optimizer check changed adapter weights. The inspected targets include the hybrid model’s `in_proj_qkv`, `in_proj_z`, and `out_proj` linear-attention projections plus `q_proj`, `k_proj`, `v_proj`, and `o_proj` full-attention projections. See [artifacts/experiments/qwen35-08b-base-cpu-preflight.json](artifacts/experiments/qwen35-08b-base-cpu-preflight.json).
-
-TRL 1.12 computes the default generation batch as `per_device_train_batch_size × gradient_accumulation_steps = 1 × 8 = 8`; it is divisible by `num_generations = 4`. The trainer checks that condition before construction. TRL 1.12 no longer accepts the scaffold’s `max_prompt_length` argument, so the code enforces the 128-token limit against tokenized prepared prompts before trainer construction; the observed maximum was 71 tokens.
-
-## Reproduce
-
-Use a project venv. The CPU-only commands below reproduce the fallback used for these artifacts; on a functioning AMD system, install a matching ROCm Torch wheel first instead of the CPU wheel.
+Use a project virtual environment. On a working AMD system, install a matching
+ROCm Torch wheel instead of the CPU wheel below.
 
 ```bash
 python3.11 -m venv .venv
@@ -62,7 +101,7 @@ python -m countdown_grpo.prepare_data --data-dir artifacts/data --seed 42 --fres
 python -m countdown_grpo.environment --output artifacts/environment/cpu-train-manifest.json
 ```
 
-Run the untouched base evaluation and CPU smoke explicitly:
+Run the base evaluation and one-step smoke explicitly:
 
 ```bash
 python -m countdown_grpo.evaluate \
@@ -81,31 +120,32 @@ python -m countdown_grpo.train_grpo \
   --experiment-id qwen35-08b-base-cpu-smoke-s42-retry
 ```
 
-The training command saves adapter weights only under ignored `outputs/`. It writes safe, commit-ready configs, status, rollout diagnostics, and raw completions to `artifacts/experiments/`.
+Model weights, caches, and adapters stay ignored. Commit-ready configs,
+diagnostics, and completions are written under `artifacts/`.
 
-## Repository map
+## Where to look
 
 ```text
-src/countdown_grpo/
-  verifier.py        Safe exact integer-only parser and scorer
-  oracle.py          Independent exhaustive solvability oracle
-  data.py            Canonical tasks, splits, fresh-suite generation
-  prepare_data.py    Source audit and persisted artifact builder
-  evaluate.py        Saved JSONL baseline/checkpoint evaluator
-  training.py        GRPO batch legality and reward-group diagnostics
-  train_grpo.py      LoRA + binary-reward GRPO runner
-  preflight.py       Model, LoRA, backward, and optimizer validation
-  report.py          Evidence-only Markdown/SVG generator
-artifacts/           Saved audit, manifests, completions, and diagnostics
-reports/             Generated experiment report
-plots/               Generated evidence-only SVG
+src/countdown_grpo/verifier.py   exact parser and scorer
+src/countdown_grpo/oracle.py     independent solvability check
+src/countdown_grpo/data.py       canonical splits and fresh-task generation
+src/countdown_grpo/evaluate.py   JSONL evaluator and summary metrics
+src/countdown_grpo/train_grpo.py LoRA + binary-reward GRPO runner
+src/countdown_grpo/report.py     report and SVG generator
+docs/experiment-protocol.md      full methods and stopping rules
 ```
 
-## Limitations and next experiment
+## Limits and next step
 
-This did not test a functional ROCm GPU path, a 25–100-step diagnostic, a 300-step run, an extra seed, or an instruct positive control. It also does not establish that RL cannot learn Countdown: the observed base policy had no rewarded trajectories under this bounded configuration.
+This repository does not claim that RL cannot learn Countdown. The observed
+base policy simply produced no positive rollout group in a short CPU run.
+There is no functional ROCm training result, 25–100-step diagnostic, extra
+seed, or instruct-model control.
 
-The single best next experiment is to restore a working ROCm PyTorch environment on the intended RX 7900 XTX, rerun the untouched base baseline with a documented train/dev-only sampling-diversity check, and proceed to a 25–50-step diagnostic only if mixed reward groups occur. Keep the final source test frozen and retain this all-zero CPU result.
+The next useful experiment is to restore a compatible ROCm PyTorch setup on
+the RX 7900 XTX, rerun the fixed base baseline, and use only train/dev data to
+check sampling diversity. A 25–50-step diagnostic is justified only if mixed
+reward groups appear; the final source test remains frozen.
 
 ## Sources
 
