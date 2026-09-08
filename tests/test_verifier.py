@@ -4,7 +4,12 @@ import pytest
 
 from countdown_grpo.oracle import reachable_values, solve_countdown
 from countdown_grpo.rewards import countdown_reward
-from countdown_grpo.verifier import extract_expression, verify_completion, verify_expression
+from countdown_grpo.verifier import (
+    extract_expression,
+    reaches_target_without_contract,
+    verify_completion,
+    verify_expression,
+)
 
 
 @pytest.mark.parametrize(
@@ -71,6 +76,12 @@ def test_truncated_completion_is_not_rewarded():
     result = verify_completion("<answer>(44 - 19)", 50, [44, 19, 2], truncated=True)
     assert result.reason == "truncated"
     assert not result.valid
+
+
+def test_target_hit_diagnostic_is_exact_but_does_not_relax_the_reward_contract():
+    expression = "8 / 3 * 3"
+    assert reaches_target_without_contract(expression, 8)
+    assert verify_expression(expression, 8, [8, 3, 3]).reason == "non_integer_intermediate"
 
 
 def test_reward_accepts_text_and_chat_style_completions():

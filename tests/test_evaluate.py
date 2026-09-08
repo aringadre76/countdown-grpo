@@ -24,6 +24,18 @@ def test_summary_reports_exact_legal_and_pass_at_k_metrics():
             "split": "fresh_test",
         },
         {
+            "task_id": "c",
+            "generation_mode": "sample",
+            "reward": 0.0,
+            "failure_category": "non_integer_intermediate",
+            "truncation": False,
+            "completion_length": 9,
+            "num_count": 3,
+            "split": "test",
+            "target": 8,
+            "extracted_expression": "8 / 3 * 3",
+        },
+        {
             "task_id": "b",
             "generation_mode": "sample",
             "reward": 1.0,
@@ -35,6 +47,7 @@ def test_summary_reports_exact_legal_and_pass_at_k_metrics():
         },
     ]
     summary = summarise_records(records)
-    assert summary["exact_solve_rate"] == 2 / 3
-    assert summary["legal_expression_rate"] == 1.0
-    assert summary["pass_at_k_by_generation_mode"] == {"greedy": 1.0, "sample": 1.0}
+    assert summary["exact_solve_rate"] == 0.5
+    assert summary["legal_expression_rate"] == 0.75
+    assert summary["target_hit_but_illegal_rate"] == 0.25
+    assert summary["pass_at_k_by_generation_mode"] == {"greedy": 1.0, "sample": 0.5}

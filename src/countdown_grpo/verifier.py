@@ -69,11 +69,20 @@ class _VerificationError(ValueError):
 
 
 class _Parser:
-    def __init__(self, expression: str, allowed_numbers: list[int]):
+    def __init__(
+        self,
+        expression: str,
+        allowed_numbers: list[int] | None,
+        *,
+        require_integer_intermediates: bool,
+    ):
         self.tokens = self._tokenize(expression)
         self.position = 0
         self.used_numbers: list[int] = []
-        self.allowed_numbers = Counter(int(number) for number in allowed_numbers)
+        self.allowed_numbers = (
+            Counter(int(number) for number in allowed_numbers) if allowed_numbers is not None else None
+        )
+        self.require_integer_intermediates = require_integer_intermediates
 
     @staticmethod
     def _tokenize(expression: str) -> list[str]:
@@ -102,9 +111,8 @@ class _Parser:
         self.position += 1
         return token
 
-    @staticmethod
-    def _integer(value: Fraction) -> Fraction:
-        if value.denominator != 1:
+    def _integer(self, value: Fraction) -> Fraction:
+        if self.require_integer_intermediates and value.denominator != 1:
             raise _VerificationError("non_integer_intermediate", "a binary operation produced a fraction")
         return value
 
@@ -112,7 +120,7 @@ class _Parser:
         value = self._parse_sum()
         if self._peek() is not None:
             raise _VerificationError("syntax_error", "trailing tokens")
-        if Counter(self.used_numbers) != self.allowed_numbers:
+        if self.allowed_numbers is not None and Counter(self.used_numbers) != self.allowed_numbers:
             raise _VerificationError(
                 "wrong_number_multiset", "each supplied number must be used exactly once"
             )
@@ -151,7 +159,7 @@ class _Parser:
         if token is None or not token.isdigit():
             raise _VerificationError("syntax_error", "expected a supplied integer")
         number = int(self._take())
-        if self.used_numbers.count(number) >= self.allowed_numbers[number]:
+        if self.allowed_numbers is not None and self.used_numbers.count(number) >= self.allowed_numbers[number]:
             raise _VerificationError("wrong_number_multiset", "a supplied number was reused")
         self.used_numbers.append(number)
         return Fraction(number)
@@ -198,7 +206,7 @@ def verify_expression(expression: str, target: int, nums: list[int]) -> Verifica
     """Verify an expression against the locked exact Countdown contract."""
 
     try:
-        value = _Parser(expression, nums).parse()
+        value = _Parser(expression, nums, require_integer_intermediates=True).parse()
     except _VerificationError as error:
         return VerificationResult(valid=False, reason=error.category, detail=str(error))
     if value != Fraction(int(target)):
@@ -209,6 +217,26 @@ def verify_expression(expression: str, target: int, nums: list[int]) -> Verifica
             detail=f"expression evaluates to {value}, not {target}",
         )
     return VerificationResult(valid=True, value=value, reason="ok")
+
+
+def reaches_target_without_contract(expression: str, target: int) -> bool:
+    """Return whether a syntactically legal arithmetic expression reaches ``target``.
+
+    This is an analysis-only diagnostic for expressions that fail the locked
+    Countdown contract. It still uses the same parser and exact rational
+    arithmetic; it merely ignores the supplied-number multiset and permits
+    fractional intermediate values. It must never be used for reward.
+    """
+
+    try:
+        value = _Parser(
+            expression,
+            allowed_numbers=None,
+            require_integer_intermediates=False,
+        ).parse()
+    except _VerificationError:
+        return False
+    return value == Fraction(int(target))
 
 
 def verify_completion(

@@ -48,44 +48,48 @@ def _load_model_and_tokenizer(model_id: str, revision: str | None, device: str):
     return model, tokenizer, torch, torch_device, resolved_revision
 
 
-class _DiagnosticsCallback:
-    """TRL callback that writes exact reward diagnostics and rollout text as JSONL."""
+def make_diagnostics_callback(telemetry: RewardTelemetry, output_path: Path):
+    """Build the optional Transformers callback that persists GRPO rollouts.
 
-    def __init__(self, telemetry: RewardTelemetry, output_path: Path) -> None:
-        from transformers import TrainerCallback
+    Keeping this import local lets the package's CPU-only verifier tests run
+    without Transformers installed.
+    """
 
-        class Callback(TrainerCallback):
-            pass
+    from transformers import TrainerCallback
 
-        self._callback = Callback()
-        self.telemetry = telemetry
-        self.output_path = output_path
-        self.output_path.parent.mkdir(parents=True, exist_ok=True)
-        self._callback.on_log = self.on_log
-        self._callback.on_train_end = self.on_train_end
+    class DiagnosticsCallback(TrainerCallback):
+        def __init__(self) -> None:
+            self.telemetry = telemetry
+            self.output_path = output_path
+            self.output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def on_log(self, args: Any, state: Any, control: Any, logs: dict[str, Any] | None = None, **_: Any):
-        self._flush(state.global_step, logs or {})
-        return control
+        def on_log(
+            self,
+            args: Any,
+            state: Any,
+            control: Any,
+            logs: dict[str, Any] | None = None,
+            **_: Any,
+        ):
+            self._flush(state.global_step, logs or {})
+            return control
 
-    def on_train_end(self, args: Any, state: Any, control: Any, **_: Any):
-        self._flush(state.global_step, {})
-        return control
+        def on_train_end(self, args: Any, state: Any, control: Any, **_: Any):
+            self._flush(state.global_step, {})
+            return control
 
-    def _flush(self, step: int, trainer_logs: dict[str, Any]) -> None:
-        events = self.telemetry.pop_events()
-        if not events:
-            return
-        with self.output_path.open("a", encoding="utf-8", newline="\n") as handle:
-            for event in events:
-                event["optimizer_step"] = step
-                event["timestamp"] = datetime.now(UTC).isoformat()
-                event["trainer_logs"] = trainer_logs
-                handle.write(json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n")
+        def _flush(self, step: int, trainer_logs: dict[str, Any]) -> None:
+            events = self.telemetry.pop_events()
+            if not events:
+                return
+            with self.output_path.open("a", encoding="utf-8", newline="\n") as handle:
+                for event in events:
+                    event["optimizer_step"] = step
+                    event["timestamp"] = datetime.now(UTC).isoformat()
+                    event["trainer_logs"] = trainer_logs
+                    handle.write(json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n")
 
-    @property
-    def callback(self):
-        return self._callback
+    return DiagnosticsCallback()
 
 
 def main() -> None:
@@ -110,18 +114,13 @@ def main() -> None:
     args = parser.parse_args()
     evidence_dir = args.evidence_dir or Path("artifacts/experiments") / args.experiment_id
     evidence_dir.mkdir(parents=True, exist_ok=True)
-    (evidence_dir / "attempt.json").write_text(
-        json.dumps(
-            {
-                "status": "started",
-                "timestamp": datetime.now(UTC).isoformat(),
-                "command": [sys.executable, "-m", "countdown_grpo.train_grpo", *sys.argv[1:]],
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n"
-    )
+    attempt_path = evidence_dir / "attempt.json"
+    attempt = {
+        "status": "started",
+        "started_at": datetime.now(UTC).isoformat(),
+        "command": [sys.executable, "-m", "countdown_grpo.train_grpo", *sys.argv[1:]],
+    }
+    attempt_path.write_text(json.dumps(attempt, indent=2, sort_keys=True) + "\n")
 
     generation_batch = validate_grpo_batch(
         per_device_train_batch_size=args.per_device_train_batch_size,
@@ -143,7 +142,7 @@ def main() -> None:
         raise RuntimeError("Install the project train extra before running GRPO") from error
 
     telemetry = RewardTelemetry(num_generations=args.num_generations)
-    diagnostics = _DiagnosticsCallback(telemetry, evidence_dir / "grpo-diagnostics.jsonl")
+    diagnostics_callback = make_diagnostics_callback(telemetry, evidence_dir / "grpo-diagnostics.jsonl")
     train_dataset = load_prepared_dataset(args.data_dir / args.train_file)
     maximum_prompt_tokens = max(
         len(tokenizer.encode(str(task["prompt"]), add_special_tokens=False)) for task in train_dataset
@@ -185,7 +184,7 @@ def main() -> None:
             target_modules=target_modules,
             task_type="CAUSAL_LM",
         ),
-        callbacks=[diagnostics.callback],
+        callbacks=[diagnostics_callback],
         args=GRPOConfig(
             output_dir=str(args.output_dir),
             max_steps=args.max_steps,
@@ -212,33 +211,25 @@ def main() -> None:
         train_result = trainer.train()
         trainer.save_model(str(args.output_dir / "final-adapter"))
     except Exception as error:
-        (evidence_dir / "attempt.json").write_text(
-            json.dumps(
-                {
-                    "status": "failed",
-                    "timestamp": datetime.now(UTC).isoformat(),
-                    "error_type": type(error).__name__,
-                    "error": str(error),
-                },
-                indent=2,
-                sort_keys=True,
-            )
-            + "\n"
-        )
-        raise
-    (evidence_dir / "attempt.json").write_text(
-        json.dumps(
+        attempt.update(
             {
-                "status": "completed",
-                "timestamp": datetime.now(UTC).isoformat(),
-                "global_step": trainer.state.global_step,
-                "training_loss": train_result.training_loss,
-            },
-            indent=2,
-            sort_keys=True,
+                "status": "failed",
+                "finished_at": datetime.now(UTC).isoformat(),
+                "error_type": type(error).__name__,
+                "error": str(error),
+            }
         )
-        + "\n"
+        attempt_path.write_text(json.dumps(attempt, indent=2, sort_keys=True) + "\n")
+        raise
+    attempt.update(
+        {
+            "status": "completed",
+            "finished_at": datetime.now(UTC).isoformat(),
+            "global_step": trainer.state.global_step,
+            "training_loss": train_result.training_loss,
+        }
     )
+    attempt_path.write_text(json.dumps(attempt, indent=2, sort_keys=True) + "\n")
 
 
 if __name__ == "__main__":

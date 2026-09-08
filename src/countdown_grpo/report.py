@@ -75,7 +75,10 @@ def generate_report(
     lines = [
         "# Countdown GRPO evidence report",
         "",
-        "This report is generated from the saved JSON artifacts named below. It contains no inferred metrics.",
+        (
+            "Generated from the saved artifacts listed below. It reports recorded values only; "
+            "unrun stages are not filled in."
+        ),
         "",
         "## Dataset and split audit",
         "",
@@ -117,7 +120,11 @@ def generate_report(
             "",
             "## Interpretation",
             "",
-            "The saved smoke diagnostics show no mixed reward groups. Therefore the CPU smoke verifies the end-to-end GRPO plumbing but does not establish a useful group-relative learning signal or improved Countdown solving.",
+            (
+                "The smoke had no mixed reward groups, so it provided no group-relative learning signal. "
+                "It confirms only that the CPU components run together; it cannot support a claim of improved "
+                "Countdown solving."
+            ),
             "",
             "## Inputs",
             "",

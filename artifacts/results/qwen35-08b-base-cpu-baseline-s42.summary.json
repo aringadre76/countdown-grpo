@@ -59,7 +59,6 @@
   "legal_expression_rate": 0.0,
   "model_id": "Qwen/Qwen3.5-0.8B-Base",
   "no_answer_rate": 0.0875,
-  "note": "target_hit_but_illegal_rate needs a separate permissive diagnostic and never affects reward.",
   "output_jsonl": "artifacts/results/qwen35-08b-base-cpu-baseline-s42.jsonl",
   "pass_at_k_by_generation_mode": {
     "greedy": 0.0,
@@ -67,6 +66,7 @@
   },
   "record_count": 80,
   "revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "target_hit_but_illegal_definition": "Selected expression reaches the target under the exact parser while failing the locked Countdown number-use or integer-intermediate rules; diagnostic only, never reward.",
   "target_hit_but_illegal_rate": 0.0,
   "truncation_rate": 0.5875
 }

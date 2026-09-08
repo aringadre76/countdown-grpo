@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .data import read_jsonl
-from .verifier import extract_expression, verify_completion
+from .verifier import extract_expression, reaches_target_without_contract, verify_completion
 
 DEFAULT_MODEL = "Qwen/Qwen3.5-0.8B-Base"
 
@@ -40,6 +40,13 @@ def summarise_records(records: list[dict[str, Any]]) -> dict[str, Any]:
     total = len(records)
     exact = sum(record["reward"] == 1.0 for record in records)
     legal = sum(record["failure_category"] in {"ok", "wrong_target"} for record in records)
+    target_hit_but_illegal = sum(
+        record["reward"] == 0.0
+        and isinstance(record.get("extracted_expression"), str)
+        and "target" in record
+        and reaches_target_without_contract(str(record["extracted_expression"]), int(record["target"]))
+        for record in records
+    )
     truncated = sum(bool(record["truncation"]) for record in records)
     failures = Counter(record["failure_category"] for record in records)
     by_numbers: dict[str, dict[str, Any]] = {}
@@ -68,7 +75,7 @@ def summarise_records(records: list[dict[str, Any]]) -> dict[str, Any]:
         "exact_solve_rate": exact / total if total else None,
         "exact_solve_wilson_95": _wilson_interval(exact, total),
         "legal_expression_rate": legal / total if total else None,
-        "target_hit_but_illegal_rate": 0.0,
+        "target_hit_but_illegal_rate": target_hit_but_illegal / total if total else None,
         "invalid_expression_rate": (total - legal) / total if total else None,
         "no_answer_rate": failures["no_answer"] / total if total else None,
         "truncation_rate": truncated / total if total else None,
@@ -81,7 +88,10 @@ def summarise_records(records: list[dict[str, Any]]) -> dict[str, Any]:
         "by_number_count": by_numbers,
         "by_split": by_split,
         "pass_at_k_by_generation_mode": pass_at_k,
-        "note": "target_hit_but_illegal_rate needs a separate permissive diagnostic and never affects reward.",
+        "target_hit_but_illegal_definition": (
+            "Selected expression reaches the target under the exact parser while failing the locked "
+            "Countdown number-use or integer-intermediate rules; diagnostic only, never reward."
+        ),
     }
 
 
