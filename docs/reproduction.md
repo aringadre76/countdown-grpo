@@ -169,3 +169,38 @@ python -m countdown_grpo.report \
 
 Reports and plots are generated only from JSONL, manifests, and trainer
 artifacts. Never hand-edit a metric into Markdown.
+
+## 8. Train/dev-only signal follow-up
+
+After the recorded 25-step diagnostic, the next-step gate was checked without
+touching source-test or fresh-test tasks:
+
+```bash
+python -m countdown_grpo.evaluate \
+  --model Qwen/Qwen3.5-0.8B-Base \
+  --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
+  --data-dir artifacts/data --splits source_dev --limit 8 \
+  --generation-modes sample --samples-per-task 4 --max-new-tokens 32 \
+  --temperature 1.0 --top-p 0.95 --device cuda \
+  --attn-implementation eager \
+  --experiment-id qwen35-08b-base-rocm-dev-explore-l32-t1-s42 \
+  --output artifacts/rechecks/<DATE>/dev-l32-t1.jsonl \
+  --summary-output artifacts/rechecks/<DATE>/dev-l32-t1.summary.json
+
+python -m countdown_grpo.evaluate \
+  --model Qwen/Qwen3.5-0.8B-Base \
+  --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
+  --data-dir artifacts/data --splits source_dev --limit 8 \
+  --generation-modes sample --samples-per-task 4 --max-new-tokens 64 \
+  --temperature 1.3 --top-p 0.95 --device cuda \
+  --attn-implementation eager \
+  --experiment-id qwen35-08b-base-rocm-dev-explore-l64-t13-s42 \
+  --output artifacts/rechecks/<DATE>/dev-l64-t13.jsonl \
+  --summary-output artifacts/rechecks/<DATE>/dev-l64-t13.summary.json
+```
+
+Both probes produced 0/32 exact rewards, 0/8 positive tasks, and 0/8 mixed
+tasks. The saved decision is
+`artifacts/rechecks/2026-09-08-gpu-followup/dev-exploration-summary.json`;
+under the protocol this stops the binary-reward branch before another
+diagnostic.

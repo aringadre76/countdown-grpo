@@ -18,6 +18,9 @@
 - Added reproduction, hardware, lessons, and next-step documentation.
 - Removed the generic Torch pin from the `train` extra so installing project
   extras cannot silently replace a device-matched ROCm build.
+- Ran the gated source-dev follow-up at 32 tokens/temperature 1.0 and 64
+  tokens/temperature 1.3. Both settings produced zero exact rewards and zero
+  mixed groups, so no second GRPO diagnostic was started.
 - Reran the pinned data, preflight, base evaluation, GRPO smoke, paired adapter
   evaluation, and report on 2026-09-08. Stable scored fields match the original
   80-record base and adapter JSONL outputs.

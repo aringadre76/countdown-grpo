@@ -22,3 +22,6 @@ The diagnostic completed on the RX 7900 XTX but had one positive completion and
 24 all-zero steps. The adapter's one source success and zero fresh successes do
 not establish arithmetic-search improvement, so the protocol did not authorize
 a longer run.
+
+The gated train/dev follow-up is recorded separately under
+[`../2026-09-08-gpu-followup/`](../2026-09-08-gpu-followup/).

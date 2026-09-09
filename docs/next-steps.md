@@ -13,18 +13,20 @@ exact solutions for binary GRPO to learn from.
   arithmetic with an illegal `=` suffix.
 - The diagnostic completed on the RX 7900 XTX, but 24/25 steps were all-zero
   groups. The protocol therefore stops before the 100- and 300-step gates.
+- A train/dev-only follow-up tried 32 tokens at temperature 1.0 and 64 tokens
+  at temperature 1.3. Both settings produced 0/32 exact rewards, 0/8 positive
+  tasks, and 0/8 mixed tasks. This did not justify another GRPO diagnostic.
 
 ## Recommended sequence
 
 1. Keep the source test and fresh suite frozen. Do not tune against them.
-2. On train/dev only, measure completion length, sampling temperature, and
-   prompt-format variants as explicitly named exploration runs. Keep the model,
-   verifier, and binary reward fixed.
-3. Run another 25–50-step diagnostic only if those train/dev checks produce
-   repeatable mixed reward groups. Record the same reward, group, failure,
-   length, truncation, loss/KL, checkpoint, and compute fields.
+2. Do not launch another binary-reward diagnostic from the current all-zero
+   dev signal. The saved probes are the stopping evidence for this branch.
+3. If resources justify another attempt, make it a separately labelled
+   train/dev exploration with a predeclared diversity range and a new seed;
+   stop again unless it produces repeatable mixed groups.
 4. Evaluate any preselected checkpoint once on the frozen source and fresh
-   suites with the unchanged generation settings. Report pass@1 and pass@k
+   suites with unchanged generation settings. Report pass@1 and pass@k
    separately.
 5. Only after the base result is understood, consider a separately labelled
    0.8B instruct positive control. It cannot replace the base/no-SFT result.
