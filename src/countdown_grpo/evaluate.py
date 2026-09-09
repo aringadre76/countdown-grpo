@@ -167,6 +167,20 @@ def _generate(
     return tokenizer.decode(generated, skip_special_tokens=False), completion_length, completion_length >= max_new_tokens
 
 
+def _render_prompt(tokenizer: Any, prompt: str, use_chat_template: bool, disable_thinking: bool) -> str:
+    """Optionally render an instruct-model chat prompt; core runs stay raw."""
+
+    if not use_chat_template:
+        return prompt
+    kwargs: dict[str, Any] = {"enable_thinking": False} if disable_thinking else {}
+    return tokenizer.apply_chat_template(
+        [{"role": "user", "content": prompt}],
+        tokenize=False,
+        add_generation_prompt=True,
+        chat_template_kwargs=kwargs,
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default=DEFAULT_MODEL)
@@ -186,6 +200,16 @@ def main() -> None:
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--device", default="auto")
     parser.add_argument(
+        "--use-chat-template",
+        action="store_true",
+        help="Render prompts with the tokenizer chat template (separately labeled controls only).",
+    )
+    parser.add_argument(
+        "--disable-thinking",
+        action="store_true",
+        help="Pass enable_thinking=False to a chat template; requires --use-chat-template.",
+    )
+    parser.add_argument(
         "--attn-implementation",
         choices=("eager", "sdpa"),
         default=None,
@@ -194,6 +218,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.samples_per_task < 1:
         raise ValueError("samples_per_task must be positive")
+    if args.disable_thinking and not args.use_chat_template:
+        raise ValueError("--disable-thinking requires --use-chat-template")
 
     model, tokenizer, torch, device, resolved_revision = _load_model(
         args.model, args.revision, args.device, args.adapter_path, args.attn_implementation
@@ -208,6 +234,12 @@ def main() -> None:
         if args.limit is not None:
             tasks = tasks[: args.limit]
         for task in tasks:
+            model_prompt = _render_prompt(
+                tokenizer,
+                str(task["prompt"]),
+                args.use_chat_template,
+                args.disable_thinking,
+            )
             for generation_mode in args.generation_modes:
                 generation_count = 1 if generation_mode == "greedy" else args.samples_per_task
                 for sample_index in range(generation_count):
@@ -218,7 +250,7 @@ def main() -> None:
                         tokenizer=tokenizer,
                         torch=torch,
                         device=device,
-                        prompt=str(task["prompt"]),
+                        prompt=model_prompt,
                         generation_mode=generation_mode,
                         max_new_tokens=args.max_new_tokens,
                         temperature=args.temperature,
@@ -249,7 +281,7 @@ def main() -> None:
                             },
                             "reward": 1.0 if verdict.valid else 0.0,
                             "failure_category": verdict.reason,
-                            "prompt_length": len(tokenizer.encode(str(task["prompt"]), add_special_tokens=False)),
+                            "prompt_length": len(tokenizer.encode(model_prompt, add_special_tokens=False)),
                             "completion_length": completion_length,
                             "truncation": truncated,
                             "model_id": args.model,
@@ -269,6 +301,8 @@ def main() -> None:
                             "git_commit": git_commit,
                             "device": str(device),
                             "requested_attention_implementation": args.attn_implementation,
+                            "prompt_format": "chat_template" if args.use_chat_template else "raw",
+                            "thinking_disabled": args.disable_thinking,
                         }
                     )
                     task_index += 1
@@ -285,6 +319,8 @@ def main() -> None:
             "revision": resolved_revision,
             "adapter_path": args.adapter_path,
             "requested_attention_implementation": args.attn_implementation,
+            "prompt_format": "chat_template" if args.use_chat_template else "raw",
+            "thinking_disabled": args.disable_thinking,
             "output_jsonl": str(args.output),
             "git_commit": git_commit,
         }

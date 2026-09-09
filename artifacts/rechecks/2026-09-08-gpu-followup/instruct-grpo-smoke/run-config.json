@@ -1,0 +1,27 @@
+{
+  "dataset_rows": 8,
+  "device": "cuda",
+  "effective_generation_batch_size": 8,
+  "experiment_id": "qwen35-08b-instruct-control-grpo-rocm-smoke-s42",
+  "git_commit": "0a4e7186f58697ca25b6a6479a3813ee896c1725",
+  "gradient_accumulation_steps": 8,
+  "maximum_observed_prompt_tokens": 71,
+  "model_id": ".control-model",
+  "num_generations": 4,
+  "per_device_train_batch_size": 1,
+  "requested_attention_implementation": "eager",
+  "revision": "instruct-local-weight-sha256-04b1c301231dd422",
+  "reward": "binary exact Countdown verifier only",
+  "seed": 42,
+  "target_modules": [
+    "in_proj_qkv",
+    "in_proj_z",
+    "out_proj",
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj"
+  ],
+  "timestamp": "2026-09-09T02:08:51.228978+00:00",
+  "train_file": "artifacts/data/smoke_train.jsonl"
+}

@@ -24,6 +24,11 @@
 - Added a third 128-token/temperature 1.8 source-dev probe with the same
   all-zero result, plus an explicit cache blocker for the separately labeled
   instruct control.
+- Completed the separately labeled Qwen3.5-0.8B instruct control after the
+  user supplied its safetensors weight: recorded the SHA256 and metadata
+  provenance, added chat-template/thinking-disabled evaluation flags, and ran
+  an 80-record frozen control plus a one-step GPU GRPO smoke. Both exact eval
+  splits scored 0/40; the smoke produced two all-zero reward groups.
 - Reran the pinned data, preflight, base evaluation, GRPO smoke, paired adapter
   evaluation, and report on 2026-09-08. Stable scored fields match the original
   80-record base and adapter JSONL outputs.

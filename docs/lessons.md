@@ -26,8 +26,15 @@ Status: current as of 2026-09-08.
   128 at 1.8) produced 96 more rollouts with no exact rewards and no mixed
   tasks. Increasing length and temperature in this predeclared range did not
   recover a usable binary-reward signal.
-- A positive-control model must be downloaded separately. If it is not cached,
-  record the blocker instead of silently falling back to the base checkpoint.
+- A positive-control model must be downloaded separately. The first cache check
+  was blocked and is retained as `instruct-control-blocker.json`; after the
+  user supplied the weight, the control ran from an ignored local directory.
+  Record the weight hash and any metadata reuse rather than implying a complete
+  model snapshot.
+- Qwen3.5 instruct emits chat-style thinking/tool-call patterns unless its chat
+  template is used with thinking disabled. In the recorded 32-token control,
+  this still yielded 0/80 exact solves and mostly truncation or unsupported
+  syntax. The one-step control GRPO smoke had two all-zero reward groups.
 - The adapter produced one source-held-out exact completion and zero fresh
   completions. The corresponding base completion used an unsupported `=`
   suffix, so the cautious interpretation is possible output-format change;

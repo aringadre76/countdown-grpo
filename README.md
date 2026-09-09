@@ -38,8 +38,14 @@ As the gated follow-up, three source-dev-only sampling probes used
 (32 tokens, temperature 1.0), (64, 1.3), and (128, 1.8). All produced 0/32
 exact rewards, 0/8 positive tasks, and 0/8 mixed tasks. Because the
 development probes supplied no usable exploration signal, the protocol
-correctly stopped without another diagnostic or a longer run. Their raw
-records, the decision, and the blocked instruct-control cache check are in
+correctly stopped without another diagnostic or a longer run.
+
+As a separately labeled control, the downloaded Qwen3.5-0.8B instruct weight
+was loaded on the same GPU with the native chat template and thinking disabled.
+It scored 0/80 exact solves (0/40 source and 0/40 fresh) at a 32-token cap; a
+one-step control GRPO smoke completed but produced two all-zero reward groups.
+This does not replace the base/no-SFT result. The raw records, control smoke,
+weight hash, and historical download blocker are in
 [the follow-up evidence directory](artifacts/rechecks/2026-09-08-gpu-followup/).
 
 ## Locked experiment
@@ -100,11 +106,11 @@ docs/hardware.md                 observed hardware and software
 
 The run demonstrates a working AMD/ROCm training path, not emergent reasoning.
 The dominant failure mode was unsupported or incomplete output, and the
-diagnostic lacked sustained mixed reward groups. The next defensible step is
-train/dev-only exploration of completion length and sampling diversity, then a
-new seeded diagnostic only if mixed groups persist. The source test and fresh
-suite remain frozen. See [docs/next-steps.md](docs/next-steps.md) and
-[docs/lessons.md](docs/lessons.md).
+diagnostic lacked sustained mixed reward groups. The next defensible step is to
+preserve this lower-bound negative result and, if more work is funded, design a
+predeclared train/dev intervention for completion length or sampling diversity.
+The source test and fresh suite remain frozen. See
+[docs/next-steps.md](docs/next-steps.md) and [docs/lessons.md](docs/lessons.md).
 
 ## Sources
 

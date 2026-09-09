@@ -1,0 +1,29 @@
+{
+  "adapter_weights_changed_after_optimizer_step": true,
+  "base_parameter_count": 852985920,
+  "device": "cuda",
+  "forward_logits_shape": [
+    1,
+    18,
+    248320
+  ],
+  "lora_target_modules": [
+    "in_proj_qkv",
+    "in_proj_z",
+    "out_proj",
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj"
+  ],
+  "matched_lora_modules": 78,
+  "model_class": "Qwen3_5ForConditionalGeneration",
+  "model_id": ".control-model",
+  "module_count": 517,
+  "one_token_generation": " ",
+  "requested_attention_implementation": "eager",
+  "revision": "instruct-local-weight-sha256-04b1c301231dd422",
+  "synthetic_backward_loss": 1.8611093759536743,
+  "timestamp": "2026-09-09T01:57:31.311486+00:00",
+  "trainable_parameter_count": 1228800
+}

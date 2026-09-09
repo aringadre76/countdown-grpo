@@ -207,7 +207,37 @@ diagnostic.
 
 The follow-up also ran a third source-dev probe with `--max-new-tokens 128`
 and `--temperature 1.8`; it likewise produced 0/32 exact rewards and no mixed
-tasks. The planned instruct control is not yet runnable because
-`Qwen/Qwen3.5-0.8B` is absent from the local cache. Its exact cache-check
-output and download handoff are in
-`artifacts/rechecks/2026-09-08-gpu-followup/instruct-control-blocker.json`.
+tasks. This stops the base binary-reward branch under the protocol.
+
+## 9. Separately labeled instruct control
+
+The optional control was run only after the base branch was frozen. The user
+downloaded the single 1.75 GB instruct safetensors file through Brave. Its
+observed SHA256 is recorded in
+`artifacts/rechecks/2026-09-08-gpu-followup/instruct-control-manifest.json`.
+The local control directory reuses the cached Qwen3.5 config/tokenizer metadata
+after the official instruct config page was checked; this is explicitly not
+claimed as a complete reproducible model snapshot. The directory is ignored by
+Git and the private download path is not committed.
+
+The control uses the same verifier and frozen source/fresh tasks, but the
+Qwen3.5 chat template is enabled with thinking disabled:
+
+```bash
+python -m countdown_grpo.evaluate \
+  --model .control-model \
+  --revision instruct-local-weight-sha256-04b1c301231dd422 \
+  --data-dir artifacts/data --splits source_test fresh_test --limit 8 \
+  --generation-modes greedy sample --samples-per-task 4 --max-new-tokens 32 \
+  --temperature 1.0 --top-p 0.95 --device cuda --attn-implementation eager \
+  --use-chat-template --disable-thinking \
+  --experiment-id qwen35-08b-instruct-control-rocm-chat-nothink-l32-s42 \
+  --output artifacts/rechecks/<DATE>/instruct-chat-nothink-l32.jsonl \
+  --summary-output artifacts/rechecks/<DATE>/instruct-chat-nothink-l32.summary.json
+```
+
+Observed control result: 0/80 exact solves (0/40 source and 0/40 fresh),
+39/80 truncated records, and 34/80 unsupported-syntax records. A one-step
+control GRPO smoke also completed on the RX 7900 XTX; it produced two all-zero
+reward groups and zero positive completions. These are control observations,
+not a replacement for the locked base-model result.

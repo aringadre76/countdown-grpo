@@ -1,0 +1,50 @@
+{
+  "command": [
+    ".venv-rocm/bin/python",
+    "-m",
+    "countdown_grpo.train_grpo",
+    "--model",
+    ".control-model",
+    "--revision",
+    "instruct-local-weight-sha256-04b1c301231dd422",
+    "--data-dir",
+    "artifacts/data",
+    "--train-file",
+    "smoke_train.jsonl",
+    "--max-steps",
+    "1",
+    "--max-completion-length",
+    "32",
+    "--seed",
+    "42",
+    "--device",
+    "cuda",
+    "--attn-implementation",
+    "eager",
+    "--output-dir",
+    "outputs/qwen35-08b-instruct-control-grpo-rocm-smoke-s42",
+    "--evidence-dir",
+    "artifacts/rechecks/2026-09-08-gpu-followup/instruct-grpo-smoke",
+    "--experiment-id",
+    "qwen35-08b-instruct-control-grpo-rocm-smoke-s42"
+  ],
+  "cuda_memory_bytes": {
+    "allocated_after_training": 1954996224,
+    "peak_allocated": 2804146688,
+    "peak_reserved": 2852126720,
+    "reserved_after_training": 2852126720
+  },
+  "finished_at": "2026-09-09T02:08:57.750238+00:00",
+  "global_step": 1,
+  "started_at": "2026-09-09T02:08:40.812610+00:00",
+  "status": "completed",
+  "trainer_metrics": {
+    "epoch": 0.25,
+    "total_flos": 0.0,
+    "train_loss": 0.0,
+    "train_runtime": 5.8957,
+    "train_samples_per_second": 1.357,
+    "train_steps_per_second": 0.17
+  },
+  "training_loss": 0.0
+}

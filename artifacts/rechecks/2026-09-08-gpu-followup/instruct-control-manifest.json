@@ -1,0 +1,30 @@
+{
+  "model_id": "Qwen/Qwen3.5-0.8B",
+  "status": "control_completed",
+  "control_only": true,
+  "core_model_unchanged": "Qwen/Qwen3.5-0.8B-Base",
+  "downloaded_weight": {
+    "filename": "model.safetensors-00001-of-00001.safetensors",
+    "sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+    "bytes": 1746942600,
+    "source_page": "https://huggingface.co/Qwen/Qwen3.5-0.8B/tree/main"
+  },
+  "metadata_provenance": {
+    "config_and_tokenizer": "Cached Qwen3.5-0.8B-Base metadata reused after the official instruct config page was visibly checked; no claim of a complete instruct snapshot.",
+    "local_model_directory": ".control-model",
+    "private_download_path_committed": false
+  },
+  "preflight": "instruct-preflight.json",
+  "baseline_evaluations": [
+    "instruct-base.summary.json",
+    "instruct-base-l128.summary.json",
+    "instruct-chat-nothink.summary.json",
+    "instruct-chat-nothink-l32.summary.json"
+  ],
+  "grpo_smoke": {
+    "summary": "instruct-grpo-smoke/run-config.json",
+    "attempt": "instruct-grpo-smoke/attempt.json",
+    "diagnostics": "instruct-grpo-smoke/grpo-diagnostics.jsonl"
+  },
+  "interpretation": "The control loaded and completed one GPU GRPO step, but its frozen 80-record chat/no-thinking evaluation produced 0 exact solves. The smoke produced two all-zero reward groups, zero positive completions, and truncated or unsupported outputs. This is a formatting/exploration control observation, not evidence against or in place of the base-model experiment."
+}

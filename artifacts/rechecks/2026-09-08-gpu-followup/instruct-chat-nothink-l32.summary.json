@@ -1,0 +1,75 @@
+{
+  "adapter_path": null,
+  "by_number_count": {
+    "3": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.05580153132285689
+      ],
+      "records": 65
+    },
+    "4": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.20388330103584862
+      ],
+      "records": 15
+    }
+  },
+  "by_split": {
+    "fresh_test": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.08762160119728664
+      ],
+      "records": 40
+    },
+    "test": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.08762160119728664
+      ],
+      "records": 40
+    }
+  },
+  "completion_length": {
+    "max": 32,
+    "mean": 28.0375,
+    "min": 18
+  },
+  "exact_solve_rate": 0.0,
+  "exact_solve_wilson_95": [
+    0.0,
+    0.0458181295355271
+  ],
+  "experiment_id": "qwen35-08b-instruct-control-rocm-chat-nothink-l32-s42",
+  "failure_categories": {
+    "non_integer_intermediate": 1,
+    "truncated": 39,
+    "unsupported_syntax": 34,
+    "wrong_number_multiset": 4,
+    "wrong_target": 2
+  },
+  "git_commit": "0a4e7186f58697ca25b6a6479a3813ee896c1725",
+  "invalid_expression_rate": 0.975,
+  "legal_expression_rate": 0.025,
+  "model_id": ".control-model",
+  "no_answer_rate": 0.0,
+  "output_jsonl": "artifacts/rechecks/2026-09-08-gpu-followup/instruct-chat-nothink-l32.jsonl",
+  "pass_at_k_by_generation_mode": {
+    "greedy": 0.0,
+    "sample": 0.0
+  },
+  "prompt_format": "chat_template",
+  "record_count": 80,
+  "requested_attention_implementation": "eager",
+  "revision": "instruct-local-weight-sha256-04b1c301231dd422",
+  "target_hit_but_illegal_definition": "Selected expression reaches the target under the exact parser while failing the locked Countdown number-use or integer-intermediate rules; diagnostic only, never reward.",
+  "target_hit_but_illegal_rate": 0.0,
+  "thinking_disabled": true,
+  "truncation_rate": 0.4875
+}
