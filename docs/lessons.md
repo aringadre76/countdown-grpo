@@ -22,10 +22,12 @@ Status: current as of 2026-09-08.
 - The 25-step diagnostic had 200 rollouts, one positive completion, one mixed
   step, and 24 all-zero steps. That is sparse reward with no sustained usable
   group-relative signal, not evidence that RL is impossible.
-- Two follow-up source-dev probes (32 tokens at temperature 1.0; 64 tokens at
-  temperature 1.3) produced 64 more rollouts with no exact rewards and no
-  mixed tasks. Increasing length and temperature in this small predeclared
-  range did not recover a usable binary-reward signal.
+- Three follow-up source-dev probes (32 tokens at temperature 1.0; 64 at 1.3;
+  128 at 1.8) produced 96 more rollouts with no exact rewards and no mixed
+  tasks. Increasing length and temperature in this predeclared range did not
+  recover a usable binary-reward signal.
+- A positive-control model must be downloaded separately. If it is not cached,
+  record the blocker instead of silently falling back to the base checkpoint.
 - The adapter produced one source-held-out exact completion and zero fresh
   completions. The corresponding base completion used an unsupported `=`
   suffix, so the cautious interpretation is possible output-format change;

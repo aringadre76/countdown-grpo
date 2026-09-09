@@ -1,0 +1,11 @@
+{
+  "model_id": "Qwen/Qwen3.5-0.8B",
+  "status": "blocked_before_run",
+  "cache_check": {
+    "command": ".venv-rocm/bin/python -c 'from huggingface_hub import try_to_load_from_cache; print(try_to_load_from_cache(\"Qwen/Qwen3.5-0.8B\", \"config.json\", revision=\"main\"))'",
+    "observed_output": "None"
+  },
+  "download_policy": "No shell download was performed. New model files must use the user's Brave download path.",
+  "model_page": "https://huggingface.co/Qwen/Qwen3.5-0.8B",
+  "required_next_action": "Download the instruct checkpoint into the local Hugging Face cache, then rerun the separately labeled control with the locked verifier and evaluation settings."
+}

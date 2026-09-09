@@ -204,3 +204,10 @@ tasks. The saved decision is
 `artifacts/rechecks/2026-09-08-gpu-followup/dev-exploration-summary.json`;
 under the protocol this stops the binary-reward branch before another
 diagnostic.
+
+The follow-up also ran a third source-dev probe with `--max-new-tokens 128`
+and `--temperature 1.8`; it likewise produced 0/32 exact rewards and no mixed
+tasks. The planned instruct control is not yet runnable because
+`Qwen/Qwen3.5-0.8B` is absent from the local cache. Its exact cache-check
+output and download handoff are in
+`artifacts/rechecks/2026-09-08-gpu-followup/instruct-control-blocker.json`.

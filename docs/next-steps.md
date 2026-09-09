@@ -14,17 +14,23 @@ exact solutions for binary GRPO to learn from.
 - The diagnostic completed on the RX 7900 XTX, but 24/25 steps were all-zero
   groups. The protocol therefore stops before the 100- and 300-step gates.
 - A train/dev-only follow-up tried 32 tokens at temperature 1.0 and 64 tokens
-  at temperature 1.3. Both settings produced 0/32 exact rewards, 0/8 positive
-  tasks, and 0/8 mixed tasks. This did not justify another GRPO diagnostic.
+  at temperature 1.3, then 128 tokens at temperature 1.8. All three settings
+  produced 0/32 exact rewards, 0/8 positive tasks, and 0/8 mixed tasks. This
+  did not justify another GRPO diagnostic.
+- The separately labeled Qwen3.5-0.8B instruct control is currently blocked
+  before model loading because its config is not in the local cache. No shell
+  download was attempted; the exact blocker and Brave model-page link are in
+  `artifacts/rechecks/2026-09-08-gpu-followup/instruct-control-blocker.json`.
 
 ## Recommended sequence
 
 1. Keep the source test and fresh suite frozen. Do not tune against them.
 2. Do not launch another binary-reward diagnostic from the current all-zero
    dev signal. The saved probes are the stopping evidence for this branch.
-3. If resources justify another attempt, make it a separately labelled
-   train/dev exploration with a predeclared diversity range and a new seed;
-   stop again unless it produces repeatable mixed groups.
+3. Download `Qwen/Qwen3.5-0.8B` through the approved Brave path, then run the
+   separately labelled instruct control with the same verifier, prompt, and
+   frozen evaluation settings. Keep it a control, never a replacement for the
+   base result.
 4. Evaluate any preselected checkpoint once on the frozen source and fresh
    suites with unchanged generation settings. Report pass@1 and pass@k
    separately.

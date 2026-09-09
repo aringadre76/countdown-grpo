@@ -39,9 +39,31 @@
       "legal_records": 0,
       "summary": "dev-l64-t13.summary.json",
       "jsonl": "dev-l64-t13.jsonl"
+    },
+    {
+      "name": "dev-l128-t18",
+      "max_new_tokens": 128,
+      "temperature": 1.8,
+      "top_p": 0.95,
+      "records": 32,
+      "positive_rewards": 0,
+      "positive_tasks": 0,
+      "mixed_reward_tasks": 0,
+      "all_zero_tasks": 8,
+      "truncated_records": 10,
+      "legal_records": 0,
+      "summary": "dev-l128-t18.summary.json",
+      "jsonl": "dev-l128-t18.jsonl"
     }
   ],
-  "decision": "Do not start another GRPO diagnostic: neither train/dev probe produced a positive or mixed reward group.",
+  "decision": "Do not start another GRPO diagnostic: all three train/dev probes produced no positive or mixed reward group.",
+  "instruct_control": {
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "status": "blocked_before_run",
+    "local_cache_config": null,
+    "page_url": "https://huggingface.co/Qwen/Qwen3.5-0.8B",
+    "reason": "The instruct checkpoint is not present in the local Hugging Face cache. No shell download was performed; the project requires the user's Brave download path for new model files."
+  },
   "commands": [
     "HF_HUB_OFFLINE=1 C_INCLUDE_PATH=.rocm-python-headers/usr/include/python3.11:.rocm-python-headers/usr/include .venv-rocm/bin/python -m countdown_grpo.evaluate --splits source_dev --limit 8 --generation-modes sample --samples-per-task 4 --max-new-tokens 32 --temperature 1.0 --top-p 0.95 --device cuda --attn-implementation eager",
     "HF_HUB_OFFLINE=1 C_INCLUDE_PATH=.rocm-python-headers/usr/include/python3.11:.rocm-python-headers/usr/include .venv-rocm/bin/python -m countdown_grpo.evaluate --splits source_dev --limit 8 --generation-modes sample --samples-per-task 4 --max-new-tokens 64 --temperature 1.3 --top-p 0.95 --device cuda --attn-implementation eager"

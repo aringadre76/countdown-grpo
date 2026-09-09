@@ -34,12 +34,13 @@ The exact counts, raw completions, failure categories, trainer metrics, GPU
 memory, and plot are in the
 [GPU evidence directory](artifacts/rechecks/2026-09-08-gpu-recovery/).
 
-As the gated follow-up, two source-dev-only sampling probes used 32 tokens at
-temperature 1.0 and 64 tokens at temperature 1.3. Both produced 0/32 exact
-rewards, 0/8 positive tasks, and 0/8 mixed tasks. Because the development
-probes supplied no usable exploration signal, the protocol correctly stopped
-without another diagnostic or a longer run. Their raw records and decision are
-in [the follow-up evidence directory](artifacts/rechecks/2026-09-08-gpu-followup/).
+As the gated follow-up, three source-dev-only sampling probes used
+(32 tokens, temperature 1.0), (64, 1.3), and (128, 1.8). All produced 0/32
+exact rewards, 0/8 positive tasks, and 0/8 mixed tasks. Because the
+development probes supplied no usable exploration signal, the protocol
+correctly stopped without another diagnostic or a longer run. Their raw
+records, the decision, and the blocked instruct-control cache check are in
+[the follow-up evidence directory](artifacts/rechecks/2026-09-08-gpu-followup/).
 
 ## Locked experiment
 

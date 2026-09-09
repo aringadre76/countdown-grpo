@@ -21,6 +21,9 @@
 - Ran the gated source-dev follow-up at 32 tokens/temperature 1.0 and 64
   tokens/temperature 1.3. Both settings produced zero exact rewards and zero
   mixed groups, so no second GRPO diagnostic was started.
+- Added a third 128-token/temperature 1.8 source-dev probe with the same
+  all-zero result, plus an explicit cache blocker for the separately labeled
+  instruct control.
 - Reran the pinned data, preflight, base evaluation, GRPO smoke, paired adapter
   evaluation, and report on 2026-09-08. Stable scored fields match the original
   80-record base and adapter JSONL outputs.
