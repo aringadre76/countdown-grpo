@@ -19,7 +19,9 @@ exact solutions for binary GRPO to learn from.
   did not justify another GRPO diagnostic.
 - The separately labeled Qwen3.5-0.8B instruct control is currently blocked
   before model loading because its config is not in the local cache. No shell
-  download was attempted; the exact blocker and Brave model-page link are in
+  download was attempted. A Brave download of the 1.75 GB safetensors file
+  timed out with no file appearing in Downloads. The exact blocker and Brave
+  model-page link are in
   `artifacts/rechecks/2026-09-08-gpu-followup/instruct-control-blocker.json`.
 
 ## Recommended sequence
