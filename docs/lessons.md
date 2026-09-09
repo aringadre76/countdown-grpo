@@ -1,36 +1,49 @@
-# Lessons from the first CPU run
+# Lessons and durable constraints
 
 Status: current as of 2026-09-08.
 
-- Treat the 2026-09-07 result as a CPU integration result. WSL exposed no
-  usable GPU to PyTorch, so it cannot answer the intended RX 7900 XTX training
-  question.
-- An all-zero GRPO group has no within-group reward comparison. The one-step
-  smoke therefore checks integration, not learning and not RL's general
-  usefulness.
-- Preserve the base checkpoint, task, prompt, and exact binary reward when
-  investigating sparse reward. Changing more than one of them loses the
-  lower-bound comparison.
-- The exact verifier is a security and validity boundary. Do not use `eval`,
-  accept partial expressions, or permit fractional intermediate values in the
-  primary reward.
-- The target-hit-but-illegal metric is now computed by the exact parser in
-  diagnostic mode. It may inspect number-use and integer-intermediate failures
-  but can never affect reward.
-- Inspect Qwen3.5's live module names before attaching LoRA. The model includes
-  Gated DeltaNet projections in addition to the usual attention projections.
-- Keep raw evaluation JSONL and run metadata. Generate summaries, reports, and
-  plots from those files rather than manually transcribing results.
-- Put reruns in a new evidence directory. This keeps the original baseline and
-  smoke artifacts available for comparison.
-- The 2026-09-08 recheck reproduced every stable scored field in the two
-  80-record evaluations. JSONL hashes changed only because timestamps,
-  experiment IDs, and output paths are intentionally recorded per run.
-- When issuing WSL commands through a Windows shell wrapper, escape shell
-  variables before handing them to WSL. An unescaped temporary-venv variable
-  created untracked root `bin/`, `lib/`, `lib64`, and `pyvenv.cfg` files during
-  the 2026-09-08 validation; those exact files were verified and removed.
+## GPU recovery
 
-For the proposed GPU recovery and experiment sequence, read
-[next-steps.md](next-steps.md). For the exact commands, read
-[reproduction.md](reproduction.md).
+- A successful llama.cpp HIP stack does not prove that PyTorch training works.
+  The project needed a separate ROCm Torch/Triton environment and an observed
+  `torch.cuda.is_available()` check.
+- In WSL2, `rocminfo` was the useful HSA probe. `rocm-smi` still reported that
+  `amdgpu` was not initialized, while Torch saw and used the RX 7900 XTX.
+- Triton needed `Python.h`; extracting the supplied `libpython3.11-dev`
+  package into the ignored project directory fixed the build without changing
+  the system or llama.cpp environment.
+- Transformers SDPA failed with `CUDA error: invalid argument` on this ROCm
+  build. Explicit eager attention is the recorded compatibility workaround.
+
+## Experiment signal
+
+- The one-step GPU smoke was healthy enough to produce a mixed group: mean
+  reward 0.125 and mixed-group rate 0.5.
+- The 25-step diagnostic had 200 rollouts, one positive completion, one mixed
+  step, and 24 all-zero steps. That is sparse reward with no sustained usable
+  group-relative signal, not evidence that RL is impossible.
+- The adapter produced one source-held-out exact completion and zero fresh
+  completions. The corresponding base completion used an unsupported `=`
+  suffix, so the cautious interpretation is possible output-format change;
+  arithmetic-search improvement is unestablished.
+- Do not call a lower loss or a single exact completion emergent reasoning.
+  Keep source, fresh, pass@1, pass@k, failure categories, and raw completions
+  separate.
+
+## Engineering
+
+- Keep the exact verifier as a validity boundary. Never execute generated text;
+  reject parser tricks, omitted/reused numbers, fractional intermediates, and
+  unsupported syntax.
+- Inspect Qwen3.5's live module tree. Its Gated DeltaNet projections require
+  `in_proj_qkv`, `in_proj_z`, and `out_proj` targets in addition to the usual
+  attention projections.
+- Record every diagnostic line, not only the last line. Reports now aggregate
+  all saved steps and generate plots from those records.
+- Keep CPU tests independent of Torch/TRL. Training extras no longer install a
+  generic Torch wheel that could overwrite a device-matched ROCm build.
+- Put every rerun in a new evidence directory; keep original evidence
+  immutable and do not commit weights, caches, or credentials.
+
+For exact commands and the gated follow-up, read
+[reproduction.md](reproduction.md) and [next-steps.md](next-steps.md).

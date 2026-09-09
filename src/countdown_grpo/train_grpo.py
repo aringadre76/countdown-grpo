@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -23,7 +24,12 @@ def _git_commit() -> str | None:
     return completed.stdout.strip() if completed.returncode == 0 else None
 
 
-def _load_model_and_tokenizer(model_id: str, revision: str | None, device: str):
+def _load_model_and_tokenizer(
+    model_id: str,
+    revision: str | None,
+    device: str,
+    attn_implementation: str | None = None,
+):
     try:
         import torch
         from huggingface_hub import HfApi
@@ -38,11 +44,16 @@ def _load_model_and_tokenizer(model_id: str, revision: str | None, device: str):
     tokenizer = AutoTokenizer.from_pretrained(model_id, revision=resolved_revision)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
+    model_kwargs: dict[str, Any] = {
+        "revision": resolved_revision,
+        "dtype": dtype,
+        "low_cpu_mem_usage": True,
+    }
+    if attn_implementation is not None:
+        model_kwargs["attn_implementation"] = attn_implementation
     model = AutoModelForImageTextToText.from_pretrained(
         model_id,
-        revision=resolved_revision,
-        dtype=dtype,
-        low_cpu_mem_usage=True,
+        **model_kwargs,
     ).to(torch_device)
     model.config.use_cache = False
     return model, tokenizer, torch, torch_device, resolved_revision
@@ -104,6 +115,12 @@ def main() -> None:
     parser.add_argument("--evidence-dir", type=Path, default=None)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="auto")
+    parser.add_argument(
+        "--attn-implementation",
+        choices=("eager", "sdpa"),
+        default=None,
+        help="Optional Transformers attention backend; record compatibility overrides explicitly.",
+    )
     parser.add_argument("--allow-cpu", action="store_true")
     parser.add_argument("--per-device-train-batch-size", type=int, default=1)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=8)
@@ -115,10 +132,11 @@ def main() -> None:
     evidence_dir = args.evidence_dir or Path("artifacts/experiments") / args.experiment_id
     evidence_dir.mkdir(parents=True, exist_ok=True)
     attempt_path = evidence_dir / "attempt.json"
+    recorded_python = os.path.relpath(sys.executable, Path.cwd())
     attempt = {
         "status": "started",
         "started_at": datetime.now(UTC).isoformat(),
-        "command": [sys.executable, "-m", "countdown_grpo.train_grpo", *sys.argv[1:]],
+        "command": [recorded_python, "-m", "countdown_grpo.train_grpo", *sys.argv[1:]],
     }
     attempt_path.write_text(json.dumps(attempt, indent=2, sort_keys=True) + "\n")
 
@@ -128,10 +146,12 @@ def main() -> None:
         num_generations=args.num_generations,
     )
     model, tokenizer, _torch, device, revision = _load_model_and_tokenizer(
-        args.model, args.revision, args.device
+        args.model, args.revision, args.device, args.attn_implementation
     )
     if device.type == "cpu" and not args.allow_cpu:
         raise RuntimeError("CPU fallback requires --allow-cpu so it cannot be mistaken for the GPU experiment")
+    if device.type == "cuda":
+        _torch.cuda.reset_peak_memory_stats(device)
 
     module_names = [name for name, _ in model.named_modules()]
     target_modules = select_lora_target_suffixes(module_names)
@@ -159,6 +179,7 @@ def main() -> None:
         "model_id": args.model,
         "revision": revision,
         "device": str(device),
+        "requested_attention_implementation": args.attn_implementation,
         "train_file": str(args.data_dir / args.train_file),
         "dataset_rows": len(train_dataset),
         "maximum_observed_prompt_tokens": maximum_prompt_tokens,
@@ -227,8 +248,17 @@ def main() -> None:
             "finished_at": datetime.now(UTC).isoformat(),
             "global_step": trainer.state.global_step,
             "training_loss": train_result.training_loss,
+            "trainer_metrics": train_result.metrics,
         }
     )
+    if device.type == "cuda":
+        _torch.cuda.synchronize(device)
+        attempt["cuda_memory_bytes"] = {
+            "allocated_after_training": _torch.cuda.memory_allocated(device),
+            "reserved_after_training": _torch.cuda.memory_reserved(device),
+            "peak_allocated": _torch.cuda.max_memory_allocated(device),
+            "peak_reserved": _torch.cuda.max_memory_reserved(device),
+        }
     attempt_path.write_text(json.dumps(attempt, indent=2, sort_keys=True) + "\n")
 
 

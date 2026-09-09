@@ -1,131 +1,171 @@
 # Reproducing the experiment
 
-This runbook recreates the saved bounded CPU fallback. It does not turn that
-fallback into a GPU experiment or claim that it is a full held-out evaluation.
-Use a new directory for each rerun so the committed 2026-09-07 evidence stays
-unchanged.
+This runbook describes the recorded GPU run and the lightweight CPU checks.
+Use a new evidence directory for each rerun. Keep model weights, Hugging Face
+caches, adapters, and virtual environments outside Git.
 
-The full sequence below was rerun on 2026-09-08. It reproduced the source
-audit and split counts, completed preflight and one CPU GRPO step, and produced
-80 base plus 80 adapter evaluation records. After excluding run-specific
-timestamps, IDs, and paths, every stable scored field matched the 2026-09-07
-JSONL. See [the recheck report](../artifacts/rechecks/2026-09-08/report.md).
-
-## 1. Create the environment
+## 1. CPU test environment
 
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.0+cpu'
-python -m pip install -e '.[dev,train]'
-
+python -m pip install -e '.[dev]'
 pytest
 ruff check .
 ```
 
-For the intended GPU path, install a ROCm Torch build compatible with the
-machine instead of the CPU wheel. Do not install into the system Python or the
-llama.cpp environment.
+CI runs this same dependency class. It does not install Torch, TRL, or model
+weights.
 
-## 2. Choose a fresh evidence directory
+## 2. GPU environment used for the evidence
+
+Create a separate environment and install the device-matched wheels supplied
+for this machine. Replace `<DOWNLOADS>` with the directory containing the
+files; do not commit them.
 
 ```bash
-RUN_DIR=artifacts/rechecks/2026-09-08
-mkdir -p "$RUN_DIR"
+python3.11 -m venv .venv-rocm
+source .venv-rocm/bin/activate
+python -m pip install --upgrade pip
+python -m pip install <DOWNLOADS>/rocm_bootstrap-0.1.0-py3-none-any.whl
+python -m pip install <DOWNLOADS>/rocm_sdk_core-7.14.0-py3-none-linux_x86_64.whl \
+  <DOWNLOADS>/rocm_sdk_libraries-7.14.0-py3-none-linux_x86_64.whl \
+  <DOWNLOADS>/rocm_sdk_device_gfx1100-7.14.0-py3-none-linux_x86_64.whl
+python -m pip install <DOWNLOADS>/torch-2.13.0+rocm7.14.0-cp311-cp311-linux_x86_64.whl \
+  <DOWNLOADS>/amd_torch_device_gfx1100-2.13.0+rocm7.14.0-cp311-cp311-linux_x86_64.whl \
+  <DOWNLOADS>/triton-3.8.0+git4cff872c.rocm7.14.0-cp311-cp311-linux_x86_64.whl
+python -m pip install -e '.[train]'
+python -m pip check
 ```
 
-The recheck data JSONL is ignored because it is a rebuildable cache. The small
-audit, manifest, configurations, summaries, diagnostics, and completions are
-safe to review and may be committed when they reflect an intentional rerun.
-
-## 3. Rebuild the fixed tasks and record the machine
+The recorded Torch/ROCm environment reported Torch `2.13.0+rocm7.14.0`, HIP
+`7.14.60850`, and an AMD Radeon RX 7900 XTX. Verify before running:
 
 ```bash
+rocminfo
+python -c 'import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0), torch.version.hip)'
+```
+
+On this machine Triton also needed Python headers. Extract the supplied
+`libpython3.11-dev_3.11.15-1+jammy1_amd64.deb` into an ignored directory (do
+not install it system-wide), then export the include path:
+
+```bash
+mkdir -p .rocm-python-headers
+dpkg-deb --extract <DOWNLOADS>/libpython3.11-dev_3.11.15-1+jammy1_amd64.deb .rocm-python-headers
+export C_INCLUDE_PATH="$PWD/.rocm-python-headers/usr/include/python3.11:$PWD/.rocm-python-headers/usr/include"
+```
+
+The Debian package SHA256 was
+`1adc394918add62fb6e497382046d67b66d4d73cc887cb8be597d9e623db98ad`.
+`rocm-smi` may still report `amdgpu` not initialized under WSL; use the
+Torch device check and `rocminfo` as the training observations. See
+[hardware.md](hardware.md) for the full manifest and caveats.
+
+## 3. Prepare data and record the environment
+
+```bash
+source .venv-rocm/bin/activate
 python -m countdown_grpo.prepare_data \
-  --data-dir "$RUN_DIR/data" \
-  --revision 408f70d177020686d34a56bba5952feb45aaaee4 \
+  --data-dir artifacts/data --revision 408f70d177020686d34a56bba5952feb45aaaee4 \
   --seed 42 --fresh-size 256 --smoke-size 8
-
 python -m countdown_grpo.environment \
-  --output "$RUN_DIR/environment.json"
+  --output artifacts/rechecks/<DATE>/environment-rocm-torch.json
 ```
 
-The data step checks source-task solvability with the independent oracle,
-canonicalizes `(target, sorted nums)`, and rejects cross-split leakage. Oracle
-witnesses never reach prompts or persisted task rows.
+The data step canonicalizes `(target, sorted nums)`, checks the independent
+oracle, and never puts oracle witnesses in prompts. Use the existing frozen
+`artifacts/data` for an exact replay rather than regenerating test tasks.
 
-## 4. Check the base model and LoRA targets
+## 4. Preflight and the attention compatibility flag
+
+The default SDPA implementation failed with `CUDA error: invalid argument` on
+this ROCm build. The successful runs explicitly selected eager attention:
 
 ```bash
+export HF_HUB_OFFLINE=1
+export C_INCLUDE_PATH="$PWD/.rocm-python-headers/usr/include/python3.11:$PWD/.rocm-python-headers/usr/include"
 python -m countdown_grpo.preflight \
   --model Qwen/Qwen3.5-0.8B-Base \
   --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
-  --device cpu \
-  --output "$RUN_DIR/preflight.json"
+  --device cuda --attn-implementation eager \
+  --output artifacts/rechecks/<DATE>/qwen-preflight-eager.json
 ```
 
-For GPU use `--device cuda` only after the hardware checks in
-[hardware.md](hardware.md) pass. The preflight inspects the live module tree;
-do not replace its selected hybrid attention LoRA targets with a generic list.
+The preflight must show a Qwen3.5 conditional-generation model, the observed
+hybrid LoRA targets, a successful forward/generation/backward pass, and changed
+adapter weights after an optimizer step.
 
-## 5. Run the untouched-base baseline
+## 5. Untouched-base baseline
 
 ```bash
 python -m countdown_grpo.evaluate \
   --model Qwen/Qwen3.5-0.8B-Base \
   --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
-  --data-dir "$RUN_DIR/data" --splits source_test fresh_test --limit 8 \
-  --output "$RUN_DIR/base.jsonl" --summary-output "$RUN_DIR/base.summary.json" \
-  --experiment-id qwen35-08b-base-cpu-recheck-s42 --seed 42 \
-  --samples-per-task 4 --max-new-tokens 16 --device cpu
+  --data-dir artifacts/data --splits source_test fresh_test --limit 8 \
+  --generation-modes greedy sample --samples-per-task 4 --max-new-tokens 16 \
+  --device cuda --attn-implementation eager --seed 42 \
+  --experiment-id qwen35-08b-base-rocm-baseline-eager-s42 \
+  --output artifacts/rechecks/<DATE>/base-eager.jsonl \
+  --summary-output artifacts/rechecks/<DATE>/base-eager.summary.json
 ```
 
-This produces 80 records: greedy plus four samples for each of eight source
-and eight fresh tasks. It is intentionally too small to estimate final-test
-performance. It does, however, check the prompt, extraction, JSONL schema,
-and exact binary scorer on a fixed model revision.
+This bounded command produces 80 records: 40 source-held-out and 40 fresh.
+It is not a full final-test estimate.
 
-## 6. Run the one-step GRPO smoke and paired adapter evaluation
+## 6. GRPO smoke and diagnostic
 
 ```bash
 python -m countdown_grpo.train_grpo \
   --model Qwen/Qwen3.5-0.8B-Base \
   --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
-  --data-dir "$RUN_DIR/data" --train-file smoke_train.jsonl --max-steps 1 \
-  --max-completion-length 16 --seed 42 --allow-cpu \
-  --output-dir outputs/qwen35-08b-grpo-cpu-recheck \
-  --evidence-dir "$RUN_DIR/grpo" \
-  --experiment-id qwen35-08b-base-cpu-smoke-recheck-s42
+  --data-dir artifacts/data --train-file smoke_train.jsonl --max-steps 1 \
+  --max-completion-length 16 --seed 42 --device cuda \
+  --attn-implementation eager \
+  --output-dir outputs/qwen35-08b-grpo-rocm-eager-smoke-s42 \
+  --evidence-dir artifacts/rechecks/<DATE>/grpo-smoke-eager-s42 \
+  --experiment-id qwen35-08b-base-rocm-eager-smoke-s42
 
+python -m countdown_grpo.train_grpo \
+  --model Qwen/Qwen3.5-0.8B-Base \
+  --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
+  --data-dir artifacts/data --train-file smoke_train.jsonl --max-steps 25 \
+  --max-completion-length 16 --seed 42 --device cuda \
+  --attn-implementation eager \
+  --output-dir outputs/qwen35-08b-grpo-rocm-eager-diagnostic-s42 \
+  --evidence-dir artifacts/rechecks/<DATE>/grpo-diagnostic-eager-s42 \
+  --experiment-id qwen35-08b-base-rocm-eager-diagnostic-s42
+```
+
+The effective generation batch is `1 × 8 = 8`, divisible by four generations
+per prompt. Continue beyond the diagnostic only when mixed reward groups remain
+usable; all-zero groups are not evidence that RL cannot work.
+
+## 7. Paired adapter evaluation and report
+
+```bash
 python -m countdown_grpo.evaluate \
   --model Qwen/Qwen3.5-0.8B-Base \
   --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
-  --adapter-path outputs/qwen35-08b-grpo-cpu-recheck/final-adapter \
-  --data-dir "$RUN_DIR/data" --splits source_test fresh_test --limit 8 \
-  --output "$RUN_DIR/adapter.jsonl" --summary-output "$RUN_DIR/adapter.summary.json" \
-  --experiment-id qwen35-08b-base-cpu-smoke-adapter-recheck-s42 --seed 42 \
-  --samples-per-task 4 --max-new-tokens 16 --device cpu
-```
+  --adapter-path outputs/qwen35-08b-grpo-rocm-eager-diagnostic-s42/final-adapter \
+  --data-dir artifacts/data --splits source_test fresh_test --limit 8 \
+  --generation-modes greedy sample --samples-per-task 4 --max-new-tokens 16 \
+  --device cuda --attn-implementation eager --seed 42 \
+  --experiment-id qwen35-08b-base-rocm-eager-diagnostic-adapter-s42 \
+  --output artifacts/rechecks/<DATE>/adapter-eager-diagnostic.jsonl \
+  --summary-output artifacts/rechecks/<DATE>/adapter-eager-diagnostic.summary.json
 
-The smoke must retain the base checkpoint, no supervised solutions, the
-integer-only verifier, and the 0/1 exact reward. It is an integration check
-only. Do not start a longer run unless the saved diagnostics include mixed
-reward groups.
-
-## 7. Generate the report from saved files
-
-```bash
 python -m countdown_grpo.report \
-  --audit "$RUN_DIR/data/source_audit.json" \
-  --manifest "$RUN_DIR/data/source_split_manifest.json" \
-  --environment "$RUN_DIR/environment.json" \
-  --baseline "$RUN_DIR/base.summary.json" \
-  --smoke-attempt "$RUN_DIR/grpo/attempt.json" \
-  --smoke-diagnostics "$RUN_DIR/grpo/grpo-diagnostics.jsonl" \
-  --adapter "$RUN_DIR/adapter.summary.json" \
-  --markdown-output "$RUN_DIR/report.md" \
-  --svg-output "$RUN_DIR/summary.svg"
+  --audit artifacts/data/source_audit.json \
+  --manifest artifacts/data/source_split_manifest.json \
+  --environment artifacts/rechecks/<DATE>/environment-rocm-torch.json \
+  --baseline artifacts/rechecks/<DATE>/base-eager.summary.json \
+  --smoke-attempt artifacts/rechecks/<DATE>/grpo-diagnostic-eager-s42/attempt.json \
+  --smoke-diagnostics artifacts/rechecks/<DATE>/grpo-diagnostic-eager-s42/grpo-diagnostics.jsonl \
+  --adapter artifacts/rechecks/<DATE>/adapter-eager-diagnostic.summary.json \
+  --markdown-output artifacts/rechecks/<DATE>/report.md \
+  --svg-output artifacts/rechecks/<DATE>/summary.svg
 ```
 
-The report generator reads saved artifacts; it does not reconstruct metrics
-from prose or accept hand-entered values.
+Reports and plots are generated only from JSONL, manifests, and trainer
+artifacts. Never hand-edit a metric into Markdown.

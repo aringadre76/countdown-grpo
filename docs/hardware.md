@@ -1,42 +1,51 @@
 # Hardware and observed environment
 
-Status: observed CPU fallback on 2026-09-07 and rechecked on 2026-09-08.
-
-The intended training machine is an AMD Radeon RX 7900 XTX system. That is the
-target hardware for the core experiment, not evidence that a GPU run occurred.
-The saved run was executed inside WSL2, where the GPU was unavailable to
-PyTorch.
+Status: GPU path verified on 2026-09-08 in WSL2. The intended device and the
+device used for the recorded run are both an AMD Radeon RX 7900 XTX.
 
 | Item | Observed value | Evidence |
 | --- | --- | --- |
-| CPU | 12th Gen Intel Core i7-12700K | `lscpu` in the manifest |
-| CPUs visible to WSL | 6 logical CPUs | `lscpu` in the manifest |
-| OS | Linux 5.15.167.4-microsoft-standard-WSL2 | manifest |
-| Python | 3.11.15 | manifest |
-| Torch | 2.14.0+cpu | manifest |
-| Accelerate / Datasets | 1.14.0 / 5.0.1 | manifest |
+| CPU | 12th Gen Intel Core i7-12700K; 6 vCPUs visible to WSL | `environment-rocm-torch.json` |
+| WSL kernel | 6.18.33.2-microsoft-standard-WSL2 | `environment-rocm-torch.json` |
+| Python | 3.11.15 | `environment-rocm-torch.json` |
+| Torch | 2.13.0+rocm7.14.0 | `environment-rocm-torch.json` |
+| ROCm/HIP | 7.14.60850 | `environment-rocm-torch.json` |
+| GPU | AMD Radeon RX 7900 XTX, `gfx1100`, 96 CUs | `rocminfo` and Torch |
 | Transformers / TRL / PEFT | 5.16.1 / 1.12.0 / 0.20.0 | manifest |
-| CUDA visible to Torch | no; device count 0 | manifest |
-| ROCm probe | `Driver not initialized (amdgpu not found in modules)` | `rocm-smi` in manifest |
-| llama.cpp server | none found | `pgrep -af 'llama.*server'` in manifest |
+| Torch CUDA view | available, one device | manifest |
+| llama.cpp server | no matching process observed | manifest |
 
-The canonical record is
-[artifacts/environment/cpu-train-manifest.json](../artifacts/environment/cpu-train-manifest.json).
-It stores command output, package versions, and only the names of relevant
-environment variables. It does not infer a device model from the host plan.
-The 2026-09-08 recheck produced the same device availability and ROCm probe:
-[artifacts/rechecks/2026-09-08/environment.json](../artifacts/rechecks/2026-09-08/environment.json).
+The canonical GPU manifest is
+[environment-rocm-torch.json](../artifacts/rechecks/2026-09-08-gpu-recovery/environment-rocm-torch.json).
+`rocminfo` returned successfully and reported the GPU. `rocm-smi` printed
+`Driver not initialized (amdgpu not found in modules)`, which is a WSL
+userspace caveat here rather than proof that the GPU was unavailable: Torch
+successfully ran a bf16 autograd test and the Qwen preflight, baseline, and
+GRPO jobs on `cuda:0`. The recorded run therefore uses Torch and `rocminfo`
+as the authoritative training observations, while retaining the `rocm-smi`
+output for completeness.
 
-## Before attempting GPU training
+## Two environments
 
-1. Use the project virtual environment, not the llama.cpp or system Python
-   environment.
-2. Record a fresh manifest with `python -m countdown_grpo.environment`.
-3. Confirm `rocm-smi` can see the device and that `torch.cuda.is_available()`
-   is true before loading the model.
-4. Inspect the named llama server and VRAM use. Stop only that named server if
-   it blocks the experiment; do not change its ROCm installation.
-5. Run `countdown_grpo.preflight` on the base model before a GRPO step.
+- `.venv` is the ignored CPU/test environment. It keeps CI and verifier tests
+  independent of Torch and TRL.
+- `.venv-rocm` is the ignored GPU environment. It contains the AMD-provided
+  Torch, Triton, ROCm SDK, Transformers, TRL, PEFT, and Accelerate packages.
+  The project does not commit wheels, model weights, adapters, or caches.
 
-Until those observations exist, describe every result as a CPU fallback, not
-as RX 7900 XTX training.
+Triton initially required Python development headers. The supplied
+`libpython3.11-dev` Debian package was extracted into an ignored project-local
+directory; no system package manager or llama.cpp installation was changed.
+The exact package hash and setup are recorded in the GPU reproduction notes.
+
+## Compatibility notes
+
+The default Transformers SDPA path failed on this ROCm build with
+`CUDA error: invalid argument`; a minimal bf16 SDPA reproduction failed the
+same way. The successful runs explicitly use `--attn-implementation eager`.
+This changes the attention implementation, not the checkpoint, task, reward,
+or LoRA target selection, and is recorded in every GPU run configuration.
+
+Before another run, record a fresh manifest, inspect the named llama.cpp
+server and GPU occupancy, run the Qwen preflight, and retain the exact output.
+Do not infer training compatibility from an unrelated HIP inference stack.

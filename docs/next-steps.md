@@ -1,92 +1,46 @@
-# Next steps after the CPU lower-bound run
+# Next steps after the GPU diagnostic
 
-The next objective is not a bigger model or a longer CPU run. It is to find
-out whether the intended Qwen3.5-0.8B base experiment has usable reward signal
-on the RX 7900 XTX while preserving the original task and reward.
+The AMD/ROCm path is now functional, so the next question is no longer “can
+the machine train?” It is whether the base policy can produce enough legal
+exact solutions for binary GRPO to learn from.
 
-## What the current result says
+## What is established
 
-The saved CPU smoke completed one optimizer step but all eight rollouts had
-reward 0. The paired bounded evaluation also had 0 exact solves in 40 source
-and 40 fresh completions for both the base model and the smoke adapter. This
-shows that the pipeline can execute on CPU. It does not estimate the final
-held-out rate, diagnose GPU training, or show that RL cannot learn Countdown.
-The full 2026-09-08 CPU recheck reproduced those stable scored outputs.
+- The untouched base scored 0/40 source-held-out and 0/40 fresh exact solves in
+  the bounded GPU evaluation.
+- The 25-step adapter scored 1/40 source and 0/40 fresh. Its one source hit is
+  consistent with formatting improvement because the base generated the same
+  arithmetic with an illegal `=` suffix.
+- The diagnostic completed on the RX 7900 XTX, but 24/25 steps were all-zero
+  groups. The protocol therefore stops before the 100- and 300-step gates.
 
-## First: recover a usable GPU environment
+## Recommended sequence
 
-1. Start a fresh WSL session and record `rocm-smi`, `torch.cuda.is_available()`,
-   `torch.version.hip`, and the device name in a new environment manifest.
-2. Use a ROCm Torch build matched to the machine. A successful llama.cpp HIP
-   inference stack is not proof that PyTorch training kernels will work.
-3. Check whether the named llama.cpp server is occupying VRAM. If it is the
-   blocker, stop only that process and record the action; do not alter its
-   installation.
-4. Run the model/LoRA preflight unchanged. It must load, generate, backprop,
-   attach LoRA to observed modules, and change adapter weights after a real
-   optimizer step.
+1. Keep the source test and fresh suite frozen. Do not tune against them.
+2. On train/dev only, measure completion length, sampling temperature, and
+   prompt-format variants as explicitly named exploration runs. Keep the model,
+   verifier, and binary reward fixed.
+3. Run another 25–50-step diagnostic only if those train/dev checks produce
+   repeatable mixed reward groups. Record the same reward, group, failure,
+   length, truncation, loss/KL, checkpoint, and compute fields.
+4. Evaluate any preselected checkpoint once on the frozen source and fresh
+   suites with the unchanged generation settings. Report pass@1 and pass@k
+   separately.
+5. Only after the base result is understood, consider a separately labelled
+   0.8B instruct positive control. It cannot replace the base/no-SFT result.
 
-Stop here if any item fails and save the actual command output. Do not switch
-to an instruct model, SFT, a shaped reward, or a different Countdown contract
-to make the primary run easier.
+## Failure-guided choices
 
-## Then: establish whether GRPO has a signal
-
-Use the frozen base prompt and train/dev data only to explore a documented
-sampling range. The purpose is not to maximize a held-out score; it is to
-measure whether exact solutions occur at all before spending GPU time.
-
-| Gate | Run | Continue only when |
-| --- | --- | --- |
-| Baseline | Fixed base checkpoint on the frozen evaluation suite | JSONL and failure breakdown are saved. |
-| Smoke | 1–2 optimizer steps | Reward pipeline is verified against oracle witnesses. |
-| Diagnostic | 25–50 steps | Some groups have both 0 and 1 rewards. |
-| Intermediate | about 100 steps | Diagnostics remain stable and signal persists. |
-| Demonstration | about 300 steps, plus another seed if feasible | Intermediate results justify more compute. |
-
-At every gate, save mean reward, variance, positive-completion rate,
-mixed-reward-group rate, all-zero/all-one groups, failure categories,
-completion length, truncation, trainer loss/KL when exposed, checkpoint, and
-actual compute. The mixed-group rate is the decision metric; a higher mean
-reward alone is not enough.
-
-## Read the failure mode before changing anything
-
-- Mostly truncation: check the completion limit and save examples. Any length
-  change is a documented train/dev setting, not a test-tuned change.
-- Mostly malformed or unsupported syntax: report a formatting issue. Do not
-  call it arithmetic improvement.
+- Mostly truncation: increase the completion limit only in a documented
+  train/dev experiment and retain the old baseline for comparison.
+- Mostly prose or unsupported syntax: call it format learning, not arithmetic
+  learning; inspect raw completions before changing prompts.
 - Legal expressions that miss the target: report constraint following without
-  arithmetic-search success.
-- A few positives but no mixed groups: increase exploration only within a
-  documented train/dev range, then rerun the signal check.
-- Source gains with no fresh-task gains: discuss source dependence or
-  memorization rather than generalization.
-- All-zero groups after a verified pipeline: report insufficient exploration
-  signal for this setup. That is a useful lower-bound result.
+  claiming search improvement.
+- Source gain with no fresh gain: discuss source dependence or memorization.
+- All-zero groups after verified setup: report insufficient exploration signal
+  for this lower-bound configuration. Do not silently add shaped reward or
+  switch to an instruct model.
 
-## Evaluation discipline
-
-Keep the source test and fresh suite frozen until a checkpoint is selected by
-the prior gates. Evaluate the untouched base and every reported checkpoint with
-identical generation settings. Report pass@1 separately from pass@k, source
-and fresh performance separately, and uncertainty intervals where the sample
-size makes them useful. The exact verifier should continue to reject parser
-tricks, reused inputs, missing inputs, fractions, division by zero, malformed
-tags, prose, and target-only answers.
-
-## Optional controls, only after the base path is understood
-
-If the core base run works technically but never receives a useful signal, a
-cheap Qwen3.5-0.8B instruct control can test whether initial policy competence
-is the limiting factor. It is a separately labeled control, never a replacement
-for the base/no-SFT result. Do not start a 3B run first. A shaped-reward run is
-also a named ablation, not evidence for the primary binary-reward question.
-
-## Best next experiment
-
-Restore ROCm PyTorch access on the RX 7900 XTX, rerun the recorded baseline,
-and run a 25–50-step LoRA GRPO diagnostic only if train/dev sampling shows
-mixed exact-reward groups. This answers the immediate uncertainty—whether the
-base policy supplies any group-relative signal—without weakening the research
-question.
+The current strongest conclusion is a reproducible GPU negative result with a
+small formatting-sensitive source hit and no fresh-task improvement.

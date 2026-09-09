@@ -91,6 +91,7 @@ ruff check .
 After training extras exist:
 
 ```bash
+# Install a device-matched Torch build first; the project extra does not pin one.
 pip install -e '.[dev,train]'
 python -m countdown_grpo.evaluate --help
 python -m countdown_grpo.train_grpo --help
@@ -138,8 +139,9 @@ These are already known. Fix or document them; do not rediscover them slowly.
   documents divisibility using the effective batch size, so this is 8 and is
   divisible by 4. Verify the pinned TRL version and effective-batch semantics
   before changing it; do not label the scaffold illegal without that check.
-- `pyproject.toml` and GitHub Actions currently install full training extras
-  for `pip install -e '.[dev]'`. Split core/dev/train dependencies.
+- `pyproject.toml` and GitHub Actions keep CPU CI separate from training
+  dependencies. The `train` extra intentionally does not pin Torch, because a
+  generic wheel could silently replace a device-matched ROCm build.
 - Qwen3.5-0.8B-Base is a vision-language hybrid with Gated DeltaNet layers.
   Inspect `named_modules()` before choosing LoRA targets. Default
   `q_proj,k_proj,v_proj,o_proj` is not sufficient.

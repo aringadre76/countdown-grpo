@@ -41,7 +41,10 @@ def _version(package: str) -> str | None:
 def capture_manifest() -> dict[str, Any]:
     """Observe, rather than infer, the supported training environment."""
 
-    gpu_commands = [_run(["rocm-smi"]), _run(["nvidia-smi"])]
+    # rocminfo uses the HSA runtime and is the meaningful AMD probe in WSL.
+    # rocm-smi is retained because it is useful on native Linux, but AMD does
+    # not support it in WSL's virtualized kernel environment.
+    gpu_commands = [_run(["rocminfo"]), _run(["rocm-smi"]), _run(["nvidia-smi"])]
     try:
         import torch
 

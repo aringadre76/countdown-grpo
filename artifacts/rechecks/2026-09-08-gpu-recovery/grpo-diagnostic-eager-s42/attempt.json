@@ -1,0 +1,50 @@
+{
+  "command": [
+    ".venv-rocm/bin/python",
+    "-m",
+    "countdown_grpo.train_grpo",
+    "--model",
+    "Qwen/Qwen3.5-0.8B-Base",
+    "--revision",
+    "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "--data-dir",
+    "artifacts/data",
+    "--train-file",
+    "smoke_train.jsonl",
+    "--max-steps",
+    "25",
+    "--max-completion-length",
+    "16",
+    "--seed",
+    "42",
+    "--device",
+    "cuda",
+    "--attn-implementation",
+    "eager",
+    "--output-dir",
+    "outputs/qwen35-08b-grpo-rocm-eager-diagnostic-s42",
+    "--evidence-dir",
+    "artifacts/rechecks/2026-09-08-gpu-recovery/grpo-diagnostic-eager-s42",
+    "--experiment-id",
+    "qwen35-08b-base-rocm-eager-diagnostic-s42"
+  ],
+  "cuda_memory_bytes": {
+    "allocated_after_training": 1954994176,
+    "peak_allocated": 2734415360,
+    "peak_reserved": 2982150144,
+    "reserved_after_training": 2982150144
+  },
+  "finished_at": "2026-09-08T18:18:16.492486+00:00",
+  "global_step": 25,
+  "started_at": "2026-09-08T18:16:46.036170+00:00",
+  "status": "completed",
+  "trainer_metrics": {
+    "epoch": 6.25,
+    "total_flos": 0.0,
+    "train_loss": 0.0033638131618499755,
+    "train_runtime": 84.4512,
+    "train_samples_per_second": 2.368,
+    "train_steps_per_second": 0.296
+  },
+  "training_loss": 0.0033638131618499755
+}

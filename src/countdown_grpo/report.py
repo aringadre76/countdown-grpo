@@ -13,6 +13,10 @@ def _load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _load_jsonl(path: Path) -> list[dict[str, Any]]:
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
 def _percentage(value: float | None) -> str:
     return "not measured" if value is None else f"{value * 100:.2f}%"
 
@@ -21,6 +25,47 @@ def _summary_rows(summary: dict[str, Any]) -> list[tuple[str, float | None]]:
     rows = [("overall", summary.get("exact_solve_rate"))]
     rows.extend((f"split: {name}", values.get("exact_solve_rate")) for name, values in summary.get("by_split", {}).items())
     return rows
+
+
+def _diagnostic_summary(path: Path) -> dict[str, Any]:
+    """Aggregate every saved GRPO diagnostic line, not just the final step."""
+
+    rows = _load_jsonl(path)
+    if not rows:
+        return {
+            "steps": 0,
+            "rollouts": 0,
+            "mean_reward": None,
+            "mean_reward_variance": None,
+            "positive_completion_rate": None,
+            "mixed_reward_group_rate": None,
+            "all_zero_group_rate": None,
+            "all_one_group_rate": None,
+            "truncation_rate": None,
+            "failure_categories": {},
+            "completion_length_mean": None,
+            "positive_steps": [],
+        }
+    rollouts = [rollout for row in rows for rollout in row.get("rollouts", [])]
+    categories: dict[str, int] = {}
+    for rollout in rollouts:
+        category = rollout.get("failure_category", "other_invalid")
+        categories[category] = categories.get(category, 0) + 1
+    mean = lambda key: sum(float(row.get(key, 0.0)) for row in rows) / len(rows)
+    return {
+        "steps": len(rows),
+        "rollouts": len(rollouts),
+        "mean_reward": sum(float(row.get("mean_reward", 0.0)) for row in rows) / len(rows),
+        "mean_reward_variance": mean("reward_variance"),
+        "positive_completion_rate": sum(float(row.get("positive_completion_rate", 0.0)) for row in rows) / len(rows),
+        "mixed_reward_group_rate": mean("mixed_reward_group_rate"),
+        "all_zero_group_rate": mean("all_zero_group_rate"),
+        "all_one_group_rate": mean("all_one_group_rate"),
+        "truncation_rate": mean("truncation_rate"),
+        "failure_categories": categories,
+        "completion_length_mean": sum(float(row.get("completion_length_mean", 0.0)) for row in rows) / len(rows),
+        "positive_steps": [int(row["optimizer_step"]) for row in rows if float(row.get("mean_reward", 0.0)) > 0],
+    }
 
 
 def write_svg(path: Path, series: list[tuple[str, float | None]]) -> None:
@@ -69,7 +114,7 @@ def generate_report(
     environment = _load(environment_path)
     baseline = _load(baseline_path)
     smoke_attempt = _load(smoke_attempt_path)
-    smoke_diagnostic = json.loads(smoke_diagnostics_path.read_text(encoding="utf-8").splitlines()[-1])
+    smoke_diagnostic = _diagnostic_summary(smoke_diagnostics_path)
     adapter = _load(adapter_path) if adapter_path is not None else None
 
     lines = [
@@ -90,8 +135,8 @@ def generate_report(
         "",
         "## Observed environment",
         "",
-        f"- Python {environment['python']}; Torch {environment['torch']['version']}; CUDA available: {environment['torch']['cuda_available']}.",
-        f"- ROCm probe: {environment['gpu_probes'][0]['stderr'] or environment['gpu_probes'][0]['stdout'] or 'no output'}",
+        f"- Python {environment['python']}; Torch {environment['torch']['version']}; CUDA available: {environment['torch']['cuda_available']}; device: {environment['torch'].get('device_name', 'not reported')}; HIP: {environment['torch'].get('hip_version', 'not reported')}.",
+        f"- HSA probe: `rocminfo` returned {environment['gpu_probes'][0]['returncode']} and reported the RX 7900 XTX; `rocm-smi` remains non-diagnostic under this WSL session.",
         "",
         "## Untouched-base baseline",
         "",
@@ -99,10 +144,12 @@ def generate_report(
         f"- Source-held-out: {_percentage(baseline['by_split'].get('test', {}).get('exact_solve_rate'))}; fresh-task: {_percentage(baseline['by_split'].get('fresh_test', {}).get('exact_solve_rate'))}.",
         f"- Failure categories: `{json.dumps(baseline['failure_categories'], sort_keys=True)}`",
         "",
-        "## GRPO smoke",
+        "## GRPO diagnostic",
         "",
         f"- Status: {smoke_attempt['status']}; optimizer steps: {smoke_attempt.get('global_step', 'not completed')}; training loss: {smoke_attempt.get('training_loss', 'not completed')}.",
-        f"- Mean reward: {smoke_diagnostic['mean_reward']}; reward variance: {smoke_diagnostic['reward_variance']}; mixed-group rate: {smoke_diagnostic['mixed_reward_group_rate']}; all-zero-group rate: {smoke_diagnostic['all_zero_group_rate']}.",
+        f"- Aggregated over {smoke_diagnostic['steps']} steps and {smoke_diagnostic['rollouts']} rollouts: mean step reward {smoke_diagnostic['mean_reward']:.6f}; mean step reward variance {smoke_diagnostic['mean_reward_variance']:.6f}; positive-completion rate {smoke_diagnostic['positive_completion_rate']:.6f}.",
+        f"- Mixed-group rate: {smoke_diagnostic['mixed_reward_group_rate']:.6f}; all-zero-group rate: {smoke_diagnostic['all_zero_group_rate']:.6f}; all-one-group rate: {smoke_diagnostic['all_one_group_rate']:.6f}; truncation rate: {smoke_diagnostic['truncation_rate']:.6f}.",
+        f"- Positive steps: `{smoke_diagnostic['positive_steps']}`; mean completion length: {smoke_diagnostic['completion_length_mean']:.2f} characters.",
         f"- Failure categories: `{json.dumps(smoke_diagnostic['failure_categories'], sort_keys=True)}`",
     ]
     if adapter is not None:
@@ -112,7 +159,7 @@ def generate_report(
                 "## Smoke-adapter comparison",
                 "",
                 f"- Records: {adapter['record_count']}; exact solve rate: {_percentage(adapter['exact_solve_rate'])}; legal expression rate: {_percentage(adapter['legal_expression_rate'])}.",
-                "- This one-step all-zero-reward smoke is an integration comparison, not a learning result.",
+                "- This 25-step sparse-signal adapter comparison is not evidence of learning improvement; source and fresh breakdowns remain the deciding evidence.",
             ]
         )
     lines.extend(
@@ -121,9 +168,10 @@ def generate_report(
             "## Interpretation",
             "",
             (
-                "The smoke had no mixed reward groups, so it provided no group-relative learning signal. "
-                "It confirms only that the CPU components run together; it cannot support a claim of improved "
-                "Countdown solving."
+                "The GPU smoke confirms that Qwen3.5, the observed LoRA targets, Triton, the binary reward, "
+                "and TRL GRPO run together. The 25-step diagnostic had one positive step and 24 all-zero "
+                "steps, so there was no sustained usable group-relative signal. The run does not support a "
+                "claim of improved Countdown solving."
             ),
             "",
             "## Inputs",

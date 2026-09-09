@@ -16,10 +16,16 @@ def main() -> None:
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--revision", required=True)
     parser.add_argument("--device", default="auto")
+    parser.add_argument(
+        "--attn-implementation",
+        choices=("eager", "sdpa"),
+        default=None,
+        help="Optional Transformers attention backend; record compatibility overrides explicitly.",
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     model, tokenizer, torch, device, revision = _load_model_and_tokenizer(
-        args.model, args.revision, args.device
+        args.model, args.revision, args.device, args.attn_implementation
     )
     base_parameter_count = sum(parameter.numel() for parameter in model.parameters())
     module_names = [name for name, _ in model.named_modules()]
@@ -59,6 +65,7 @@ def main() -> None:
         "model_id": args.model,
         "revision": revision,
         "device": str(device),
+        "requested_attention_implementation": args.attn_implementation,
         "model_class": type(model).__name__,
         "base_parameter_count": base_parameter_count,
         "module_count": len(module_names),

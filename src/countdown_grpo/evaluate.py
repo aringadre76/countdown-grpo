@@ -95,7 +95,13 @@ def summarise_records(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _load_model(model_id: str, revision: str | None, device: str, adapter_path: str | None):
+def _load_model(
+    model_id: str,
+    revision: str | None,
+    device: str,
+    adapter_path: str | None,
+    attn_implementation: str | None = None,
+):
     try:
         import torch
         from huggingface_hub import HfApi
@@ -110,11 +116,16 @@ def _load_model(model_id: str, revision: str | None, device: str, adapter_path: 
     tokenizer = AutoTokenizer.from_pretrained(model_id, revision=resolved_revision)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
+    model_kwargs: dict[str, Any] = {
+        "revision": resolved_revision,
+        "dtype": dtype,
+        "low_cpu_mem_usage": True,
+    }
+    if attn_implementation is not None:
+        model_kwargs["attn_implementation"] = attn_implementation
     model = AutoModelForImageTextToText.from_pretrained(
         model_id,
-        revision=resolved_revision,
-        dtype=dtype,
-        low_cpu_mem_usage=True,
+        **model_kwargs,
     )
     if adapter_path is not None:
         try:
@@ -174,12 +185,18 @@ def main() -> None:
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--device", default="auto")
+    parser.add_argument(
+        "--attn-implementation",
+        choices=("eager", "sdpa"),
+        default=None,
+        help="Optional Transformers attention backend; record compatibility overrides explicitly.",
+    )
     args = parser.parse_args()
     if args.samples_per_task < 1:
         raise ValueError("samples_per_task must be positive")
 
     model, tokenizer, torch, device, resolved_revision = _load_model(
-        args.model, args.revision, args.device, args.adapter_path
+        args.model, args.revision, args.device, args.adapter_path, args.attn_implementation
     )
     from transformers import set_seed
 
@@ -251,6 +268,7 @@ def main() -> None:
                             "experiment_id": args.experiment_id,
                             "git_commit": git_commit,
                             "device": str(device),
+                            "requested_attention_implementation": args.attn_implementation,
                         }
                     )
                     task_index += 1
@@ -266,6 +284,7 @@ def main() -> None:
             "model_id": args.model,
             "revision": resolved_revision,
             "adapter_path": args.adapter_path,
+            "requested_attention_implementation": args.attn_implementation,
             "output_jsonl": str(args.output),
             "git_commit": git_commit,
         }

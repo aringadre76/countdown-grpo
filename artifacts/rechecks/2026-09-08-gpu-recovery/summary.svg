@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="322" viewBox="0 0 760 322">
+<rect width="100%" height="100%" fill="white"/>
+<text x="10" y="22" font-size="18" font-weight="bold">Saved-evidence exact solve rates</text>
+<text x="10" y="59" font-size="14">base overall</text>
+<rect x="220" y="42" width="480" height="24" fill="#e5e7eb"/>
+<rect x="220" y="42" width="0.00" height="24" fill="#2563eb"/>
+<text x="710" y="59" text-anchor="end" font-size="14">0.00%</text>
+<text x="10" y="101" font-size="14">base split: fresh_test</text>
+<rect x="220" y="84" width="480" height="24" fill="#e5e7eb"/>
+<rect x="220" y="84" width="0.00" height="24" fill="#2563eb"/>
+<text x="710" y="101" text-anchor="end" font-size="14">0.00%</text>
+<text x="10" y="143" font-size="14">base split: test</text>
+<rect x="220" y="126" width="480" height="24" fill="#e5e7eb"/>
+<rect x="220" y="126" width="0.00" height="24" fill="#2563eb"/>
+<text x="710" y="143" text-anchor="end" font-size="14">0.00%</text>
+<text x="10" y="185" font-size="14">adapter overall</text>
+<rect x="220" y="168" width="480" height="24" fill="#e5e7eb"/>
+<rect x="220" y="168" width="6.00" height="24" fill="#2563eb"/>
+<text x="710" y="185" text-anchor="end" font-size="14">1.25%</text>
+<text x="10" y="227" font-size="14">adapter split: fresh_test</text>
+<rect x="220" y="210" width="480" height="24" fill="#e5e7eb"/>
+<rect x="220" y="210" width="0.00" height="24" fill="#2563eb"/>
+<text x="710" y="227" text-anchor="end" font-size="14">0.00%</text>
+<text x="10" y="269" font-size="14">adapter split: test</text>
+<rect x="220" y="252" width="480" height="24" fill="#e5e7eb"/>
+<rect x="220" y="252" width="12.00" height="24" fill="#2563eb"/>
+<text x="710" y="269" text-anchor="end" font-size="14">2.50%</text>
+</svg>
