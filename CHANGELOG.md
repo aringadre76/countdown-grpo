@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Added explicitly supervised, train-only witness preparation and completion-only
+  LoRA training, with a label-mask audit and saved failed/successful integration
+  evidence. Added paired task-level bootstrap helpers for confirmation analysis.
+
+- Opened the authorized learning-study extension with a dated protocol,
+  12 GPU-hour budget, dev signal gates, three-seed replication design, and
+  unseen source/fresh confirmation rules.
+- Corrected unobserved GRPO truncation being logged as false; new telemetry
+  records completion IDs and detects termination consistently with TRL.
+- Applied native chat formatting consistently in training and evaluation,
+  corrected the tokenizer thinking keyword, and distinguished EOS at the token
+  limit from clipped output. Evaluations now save rendered prompts and compute.
+
 - Recovered and documented the RX 7900 XTX ROCm/Torch training path in WSL2,
   including the local Python-header workaround and eager-attention compatibility
   setting.

@@ -1,0 +1,65 @@
+{
+  "adapter_path": null,
+  "by_number_count": {
+    "3": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.11351339317396876
+      ],
+      "records": 30
+    },
+    "4": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        6.938893903907228e-18,
+        0.07134759913335872
+      ],
+      "records": 50
+    }
+  },
+  "by_split": {
+    "dev": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.0458181295355271
+      ],
+      "records": 80
+    }
+  },
+  "completion_length": {
+    "max": 128,
+    "mean": 77.0,
+    "min": 19
+  },
+  "exact_solve_rate": 0.0,
+  "exact_solve_wilson_95": [
+    0.0,
+    0.0458181295355271
+  ],
+  "experiment_id": "instruct-dev-chat-l128-s42",
+  "failure_categories": {
+    "truncated": 38,
+    "unsupported_syntax": 38,
+    "wrong_number_multiset": 4
+  },
+  "git_commit": "de1fe13a758c40316f169ba91e4ba944a6cae18c",
+  "invalid_expression_rate": 1.0,
+  "legal_expression_rate": 0.0,
+  "model_id": ".control-model",
+  "no_answer_rate": 0.0,
+  "output_jsonl": "artifacts/rechecks/2026-09-18-learning/instruct-dev-l128.jsonl",
+  "pass_at_k_by_generation_mode": {
+    "greedy": 0.0,
+    "sample": 0.0
+  },
+  "prompt_format": "chat_template",
+  "record_count": 80,
+  "requested_attention_implementation": "eager",
+  "revision": "instruct-local-weight-sha256-04b1c301231dd422",
+  "target_hit_but_illegal_definition": "Selected expression reaches the target under the exact parser while failing the locked Countdown number-use or integer-intermediate rules; diagnostic only, never reward.",
+  "target_hit_but_illegal_rate": 0.0,
+  "thinking_disabled": true,
+  "truncation_rate": 0.475
+}

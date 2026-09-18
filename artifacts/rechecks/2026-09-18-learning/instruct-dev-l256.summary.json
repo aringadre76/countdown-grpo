@@ -1,0 +1,107 @@
+{
+  "adapter_path": null,
+  "by_number_count": {
+    "3": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.11351339317396876
+      ],
+      "records": 30
+    },
+    "4": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        6.938893903907228e-18,
+        0.07134759913335872
+      ],
+      "records": 50
+    }
+  },
+  "by_split": {
+    "dev": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.0458181295355271
+      ],
+      "records": 80
+    }
+  },
+  "command": [
+    ".venv-rocm/bin/python",
+    "-m",
+    "countdown_grpo.evaluate",
+    "--model",
+    ".control-model",
+    "--revision",
+    "instruct-local-weight-sha256-04b1c301231dd422",
+    "--data-dir",
+    "artifacts/data",
+    "--splits",
+    "source_dev",
+    "--limit",
+    "16",
+    "--generation-modes",
+    "greedy",
+    "sample",
+    "--samples-per-task",
+    "4",
+    "--max-new-tokens",
+    "256",
+    "--temperature",
+    "1.0",
+    "--top-p",
+    "0.95",
+    "--device",
+    "cuda",
+    "--attn-implementation",
+    "eager",
+    "--use-chat-template",
+    "--disable-thinking",
+    "--experiment-id",
+    "instruct-dev-chat-l256-s42",
+    "--output",
+    "artifacts/rechecks/2026-09-18-learning/instruct-dev-l256.jsonl"
+  ],
+  "completion_length": {
+    "max": 256,
+    "mean": 136.2125,
+    "min": 19
+  },
+  "completion_tokens": 10897,
+  "exact_solve_rate": 0.0,
+  "exact_solve_wilson_95": [
+    0.0,
+    0.0458181295355271
+  ],
+  "experiment_id": "instruct-dev-chat-l256-s42",
+  "failure_categories": {
+    "truncated": 37,
+    "unsupported_syntax": 39,
+    "wrong_number_multiset": 4
+  },
+  "finished_at": "2026-09-18T17:31:34.451869+00:00",
+  "git_commit": "de1fe13a758c40316f169ba91e4ba944a6cae18c",
+  "invalid_expression_rate": 1.0,
+  "legal_expression_rate": 0.0,
+  "model_id": ".control-model",
+  "no_answer_rate": 0.0,
+  "output_jsonl": "artifacts/rechecks/2026-09-18-learning/instruct-dev-l256.jsonl",
+  "pass_at_k_by_generation_mode": {
+    "greedy": 0.0,
+    "sample": 0.0
+  },
+  "peak_allocated_bytes": 1853103104,
+  "peak_reserved_bytes": 1941962752,
+  "prompt_format": "chat_template",
+  "record_count": 80,
+  "requested_attention_implementation": "eager",
+  "revision": "instruct-local-weight-sha256-04b1c301231dd422",
+  "started_at": "2026-09-18T17:26:31.881514+00:00",
+  "target_hit_but_illegal_definition": "Selected expression reaches the target under the exact parser while failing the locked Countdown number-use or integer-intermediate rules; diagnostic only, never reward.",
+  "target_hit_but_illegal_rate": 0.0,
+  "thinking_disabled": true,
+  "truncation_rate": 0.4625,
+  "wall_time_seconds": 321.674169655
+}

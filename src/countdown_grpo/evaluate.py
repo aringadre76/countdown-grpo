@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
+import sys
+import time
 from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -164,7 +167,8 @@ def _generate(
         output = model.generate(**inputs, **options)
     generated = output[0, inputs["input_ids"].shape[1] :]
     completion_length = int(generated.shape[0])
-    return tokenizer.decode(generated, skip_special_tokens=False), completion_length, completion_length >= max_new_tokens
+    terminated = completion_length > 0 and int(generated[-1]) == tokenizer.eos_token_id
+    return tokenizer.decode(generated, skip_special_tokens=False), completion_length, not terminated
 
 
 def _render_prompt(tokenizer: Any, prompt: str, use_chat_template: bool, disable_thinking: bool) -> str:
@@ -177,11 +181,13 @@ def _render_prompt(tokenizer: Any, prompt: str, use_chat_template: bool, disable
         [{"role": "user", "content": prompt}],
         tokenize=False,
         add_generation_prompt=True,
-        chat_template_kwargs=kwargs,
+        **kwargs,
     )
 
 
 def main() -> None:
+    started_at = datetime.now(UTC).isoformat()
+    started_clock = time.monotonic()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--revision", default=None)
@@ -224,6 +230,8 @@ def main() -> None:
     model, tokenizer, torch, device, resolved_revision = _load_model(
         args.model, args.revision, args.device, args.adapter_path, args.attn_implementation
     )
+    if device.type == "cuda":
+        torch.cuda.reset_peak_memory_stats(device)
     from transformers import set_seed
 
     records: list[dict[str, Any]] = []
@@ -271,6 +279,7 @@ def main() -> None:
                             "target": task["target"],
                             "oracle_solvable": task["oracle_solvable"],
                             "prompt": task["prompt"],
+                            "rendered_prompt": model_prompt,
                             "raw_completion": completion,
                             "extracted_expression": extract_expression(completion),
                             "verifier_result": {
@@ -323,8 +332,16 @@ def main() -> None:
             "thinking_disabled": args.disable_thinking,
             "output_jsonl": str(args.output),
             "git_commit": git_commit,
+            "started_at": started_at,
+            "finished_at": datetime.now(UTC).isoformat(),
+            "wall_time_seconds": time.monotonic() - started_clock,
+            "completion_tokens": sum(record["completion_length"] for record in records),
+            "command": [os.path.relpath(sys.executable, Path.cwd()), "-m", "countdown_grpo.evaluate", *sys.argv[1:]],
         }
     )
+    if device.type == "cuda":
+        summary["peak_allocated_bytes"] = torch.cuda.max_memory_allocated(device)
+        summary["peak_reserved_bytes"] = torch.cuda.max_memory_reserved(device)
     summary_path = args.summary_output or args.output.with_suffix(".summary.json")
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
     print(json.dumps(summary, indent=2, sort_keys=True))

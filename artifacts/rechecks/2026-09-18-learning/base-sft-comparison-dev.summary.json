@@ -1,0 +1,109 @@
+{
+  "adapter_path": null,
+  "by_number_count": {
+    "3": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.11351339317396876
+      ],
+      "records": 30
+    },
+    "4": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        6.938893903907228e-18,
+        0.07134759913335872
+      ],
+      "records": 50
+    }
+  },
+  "by_split": {
+    "dev": {
+      "exact_solve_rate": 0.0,
+      "exact_solve_wilson_95": [
+        0.0,
+        0.0458181295355271
+      ],
+      "records": 80
+    }
+  },
+  "command": [
+    ".venv-rocm/bin/python",
+    "-m",
+    "countdown_grpo.evaluate",
+    "--model",
+    "Qwen/Qwen3.5-0.8B-Base",
+    "--revision",
+    "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "--data-dir",
+    "artifacts/data",
+    "--splits",
+    "source_dev",
+    "--limit",
+    "16",
+    "--generation-modes",
+    "greedy",
+    "sample",
+    "--samples-per-task",
+    "4",
+    "--max-new-tokens",
+    "128",
+    "--temperature",
+    "1.0",
+    "--top-p",
+    "0.95",
+    "--device",
+    "cuda",
+    "--attn-implementation",
+    "eager",
+    "--experiment-id",
+    "base-sft-comparison-dev-l128-s42",
+    "--output",
+    "artifacts/rechecks/2026-09-18-learning/base-sft-comparison-dev.jsonl"
+  ],
+  "completion_length": {
+    "max": 128,
+    "mean": 55.5375,
+    "min": 1
+  },
+  "completion_tokens": 4443,
+  "exact_solve_rate": 0.0,
+  "exact_solve_wilson_95": [
+    0.0,
+    0.0458181295355271
+  ],
+  "experiment_id": "base-sft-comparison-dev-l128-s42",
+  "failure_categories": {
+    "malformed_answer": 2,
+    "no_answer": 4,
+    "non_integer_intermediate": 8,
+    "truncated": 26,
+    "unsupported_syntax": 28,
+    "wrong_number_multiset": 9,
+    "wrong_target": 3
+  },
+  "finished_at": "2026-09-18T17:35:12.781004+00:00",
+  "git_commit": "de1fe13a758c40316f169ba91e4ba944a6cae18c",
+  "invalid_expression_rate": 0.9625,
+  "legal_expression_rate": 0.0375,
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "no_answer_rate": 0.05,
+  "output_jsonl": "artifacts/rechecks/2026-09-18-learning/base-sft-comparison-dev.jsonl",
+  "pass_at_k_by_generation_mode": {
+    "greedy": 0.0,
+    "sample": 0.0
+  },
+  "peak_allocated_bytes": 1851743232,
+  "peak_reserved_bytes": 1941962752,
+  "prompt_format": "raw",
+  "record_count": 80,
+  "requested_attention_implementation": "eager",
+  "revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "started_at": "2026-09-18T17:33:04.884747+00:00",
+  "target_hit_but_illegal_definition": "Selected expression reaches the target under the exact parser while failing the locked Countdown number-use or integer-intermediate rules; diagnostic only, never reward.",
+  "target_hit_but_illegal_rate": 0.0125,
+  "thinking_disabled": false,
+  "truncation_rate": 0.325,
+  "wall_time_seconds": 135.47581303599986
+}

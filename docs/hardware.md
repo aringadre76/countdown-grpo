@@ -1,5 +1,9 @@
 # Hardware and observed environment
 
+The 2026-09-18 extension rechecked the RX 7900 XTX, the same recorded
+Torch/HIP build, and absence of a named llama.cpp server. Its observed manifest
+is [environment.json](../artifacts/rechecks/2026-09-18-learning/environment.json).
+
 Status: GPU path verified on 2026-09-08 in WSL2. The intended device and the
 device used for the recorded run are both an AMD Radeon RX 7900 XTX.
 

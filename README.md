@@ -9,6 +9,19 @@ bound. A careful negative result is useful.
 
 ## Current result
 
+An authorized learning-study extension started on 2026-09-18. It can investigate
+alternative methods under [a dated protocol amendment](docs/amendment-2026-09-18.md).
+The results below describe the historical experiment. A telemetry audit found
+that historical callback truncation flags defaulted to false; use TRL's saved
+clipping statistics instead. New callbacks derive termination from token IDs.
+Historical training could reward clipped expressions while evaluation rejected
+them; those positive rewards do not establish consistent end-to-end solving.
+
+The extension also verified that the local instruct weight matches the official
+weight, but its reused base tokenizer files differ from official instruct files.
+Treat historical instruct results as local packaging diagnostics. They do not
+establish the correctly packaged instruct checkpoint's solving ability.
+
 The intended AMD GPU path now works in WSL2: Torch sees an RX 7900 XTX and a
 real Qwen3.5 GRPO run completed. The measured result is still negative for
 solving improvement. This was a bounded diagnostic, not a claim about the

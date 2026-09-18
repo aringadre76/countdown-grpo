@@ -3,7 +3,9 @@
 This module deliberately does not import the verifier. It independently
 enumerates legal integer-only binary-expression trees and is used only for
 dataset quality checks and evaluation analysis; callers must never place its
-witness expressions in prompts or training examples.
+witness expressions in prompts or training examples in the no-SFT branch.
+The separately authorized supervised branch may use verified train-only
+witnesses as completion targets, never as evaluation input or prompt hints.
 """
 
 from __future__ import annotations

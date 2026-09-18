@@ -4,6 +4,7 @@
 |---|---|
 | [`../README.md`](../README.md) | Public summary, current result, and short reproduction path. |
 | [`experiment-protocol.md`](experiment-protocol.md) | Locked methods, gates, and decision rules. |
+| [`amendment-2026-09-18.md`](amendment-2026-09-18.md) | Authorized learning-study alternatives, budget, dev gates, and confirmation analysis. |
 | [`reproduction.md`](reproduction.md) | Exact commands for a clean bounded rerun. |
 | [`hardware.md`](hardware.md) | Intended hardware, observed WSL ROCm device, and compatibility caveats. |
 | [`lessons.md`](lessons.md) | Durable constraints and mistakes not to repeat. |

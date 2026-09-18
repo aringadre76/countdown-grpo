@@ -1,6 +1,6 @@
 # Lessons and durable constraints
 
-Status: current as of 2026-09-08.
+Status: current as of 2026-09-18.
 
 ## GPU recovery
 
@@ -44,6 +44,29 @@ Status: current as of 2026-09-08.
   separate.
 
 ## Engineering
+
+- Check supervised label masks before training. Tokenizing `prompt + answer`
+  can merge tokens across the boundary and cause TRL to mask part of the answer.
+  The integration audit caught this before an optimizer step. Separately
+  tokenize the generation prompt and answer and supply explicit prompt masks.
+
+- Matching model configs does not establish matching tokenizer metadata. The
+  2026-09-18 Git-blob comparison verified that base and instruct tokenizer files
+  differ despite identical model configs and shared vocab/merges. Compare exact
+  metadata against the pinned official revision before interpreting a control.
+
+- Historical GRPO callback truncation defaults were false even when TRL's
+  clipped ratio was one. Those callback fields are unreliable: use the saved
+  trainer clipping statistics for old runs. New callbacks record token IDs and
+  derive termination from EOS/pad tokens, matching installed TRL; missing
+  termination data is unknown. Clipped completions receive zero primary reward.
+  Historical training could reward a clipped expression while evaluation
+  rejected clipped output. Preserve those records, but do not describe their
+  positive reward as evidence of consistent end-to-end exact solving.
+- Pass `enable_thinking` directly to Transformers `apply_chat_template`.
+  The previous nested keyword is not the documented tokenizer API. The cached
+  0.8B template produced the same prefix in the observed comparison, so this
+  API correction alone is not evidence of a changed model response.
 
 - Keep the exact verifier as a validity boundary. Never execute generated text;
   reject parser tricks, omitted/reused numbers, fractional intermediates, and

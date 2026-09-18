@@ -1,5 +1,16 @@
 # Next steps after the GPU diagnostic
 
+The active extension now follows [the 2026-09-18 amendment](amendment-2026-09-18.md).
+It permits named alternative strategies and starts with consistent native-chat
+instruct train/dev probes at larger completion budgets. The sequence below
+records the historical base branch's stopping decision, not a ban on this extension.
+
+The two new control probes failed their signal gate, but a metadata audit also
+found mismatched tokenizer files. Treat them as packaging diagnostics, not
+official instruct-model competence measurements. A train-only supervised base
+branch is now running its 64-step diagnostic; advance only under the amendment's
+dev legality/loss gate. No confirmation performance has been measured for it.
+
 The AMD/ROCm path is now functional, so the next question is no longer “can
 the machine train?” It is whether the base policy can produce enough legal
 exact solutions for binary GRPO to learn from.
@@ -29,8 +40,8 @@ exact solutions for binary GRPO to learn from.
 1. Keep the source test and fresh suite frozen. Do not tune against them.
 2. Do not launch another binary-reward diagnostic from the current all-zero
    dev signal. The saved probes are the stopping evidence for this branch.
-3. Keep the recorded instruct control as a negative formatting/exploration
-   control; do not promote it to the core experiment.
+3. Keep the recorded local instruct control as a packaging diagnostic with
+   mismatched tokenizer metadata; do not infer official-model competence.
 4. Evaluate any preselected checkpoint once on the frozen source and fresh
    suites with unchanged generation settings. Report pass@1 and pass@k
    separately.

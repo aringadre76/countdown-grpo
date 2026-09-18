@@ -72,6 +72,7 @@ class RewardTelemetry:
     """Binary reward callable plus exact group-level diagnostics for GRPO logs."""
 
     num_generations: int
+    termination_token_ids: tuple[int, ...] = ()
 
     def __post_init__(self) -> None:
         self.__name__ = "countdown_exact_binary_reward"
@@ -87,10 +88,16 @@ class RewardTelemetry:
         rewards: list[float] = []
         details: list[dict[str, Any]] = []
         truncated_values = kwargs.get("truncated")
+        completion_ids = kwargs.get("completion_ids")
         for index, (completion, task_target, task_nums) in enumerate(
             zip(completions, target, nums, strict=True)
         ):
-            truncated = False
+            truncated = None
+            token_ids = None
+            if isinstance(completion_ids, Sequence):
+                token_ids = [int(token) for token in completion_ids[index]]
+                if self.termination_token_ids:
+                    truncated = not token_ids or token_ids[-1] not in self.termination_token_ids
             if isinstance(truncated_values, Sequence) and not isinstance(truncated_values, str):
                 truncated = bool(truncated_values[index])
             text = _completion_text(completion)
@@ -108,6 +115,8 @@ class RewardTelemetry:
                     "completion_length": len(text),
                     "completion_length_unit": "characters",
                     "truncated": truncated,
+                    "completion_token_ids": token_ids,
+                    "completion_tokens": len(token_ids) if token_ids is not None else None,
                 }
             )
         self.events.append(self._summarise_event(rewards, details))
@@ -132,7 +141,14 @@ class RewardTelemetry:
             "failure_categories": dict(sorted(failures.items())),
             "completion_length_mean": fmean(lengths) if lengths else None,
             "completion_length_unit": "characters",
-            "truncation_rate": fmean([float(detail["truncated"]) for detail in details]) if details else None,
+            "completion_tokens_mean": (
+                fmean([detail["completion_tokens"] for detail in details])
+                if details and all(detail["completion_tokens"] is not None for detail in details) else None
+            ),
+            "truncation_rate": (
+                fmean([float(detail["truncated"]) for detail in details])
+                if details and all(detail["truncated"] is not None for detail in details) else None
+            ),
             "rollouts": details,
         }
 

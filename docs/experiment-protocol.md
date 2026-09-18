@@ -1,7 +1,12 @@
 # Countdown GRPO experiment protocol
 
 Status: Current
-Last updated: 2026-09-07
+Last updated: 2026-09-18
+
+The active extension is governed by [the dated learning-study amendment](amendment-2026-09-18.md).
+It authorizes named alternative strategies while preserving this original protocol
+and its results as historical evidence. Where extension rules conflict, use the
+amendment for new experiments and this document for original-experiment claims.
 
 This is the scientific protocol. [`../AGENTS.md`](../AGENTS.md) is the short
 operational contract. [`codex-goal.md`](codex-goal.md) is the Codex `/goal`

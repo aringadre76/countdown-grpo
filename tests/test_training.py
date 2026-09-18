@@ -53,3 +53,17 @@ def test_binary_reward_telemetry_reports_group_signal_and_failures():
     assert event["positive_completion_rate"] == 0.5
     assert event["failure_categories"]["unsupported_syntax"] == 1
     assert event["failure_categories"]["wrong_target"] == 1
+
+
+def test_telemetry_uses_tokens_to_detect_clipping_and_unknown_is_not_false():
+    telemetry = RewardTelemetry(num_generations=2, termination_token_ids=(99,))
+    rewards = telemetry(
+        ["2 + 3", "2 + 3"], target=[5, 5], nums=[[2, 3], [2, 3]],
+        completion_ids=[[1, 2, 99], [1, 2, 3]],
+    )
+    assert rewards == [1.0, 0.0]
+    event = telemetry.pop_events()[0]
+    assert event["truncation_rate"] == 0.5
+    assert event["rollouts"][1]["failure_category"] == "truncated"
+    telemetry(["2 + 3", "2 + 3"], target=[5, 5], nums=[[2, 3], [2, 3]])
+    assert telemetry.pop_events()[0]["truncation_rate"] is None

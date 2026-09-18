@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from .data import load_prepared_dataset
+from .evaluate import _render_prompt
 from .training import RewardTelemetry, select_lora_target_suffixes, validate_grpo_batch
 
 DEFAULT_MODEL = "Qwen/Qwen3.5-0.8B-Base"
@@ -115,6 +116,8 @@ def main() -> None:
     parser.add_argument("--evidence-dir", type=Path, default=None)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="auto")
+    parser.add_argument("--use-chat-template", action="store_true")
+    parser.add_argument("--disable-thinking", action="store_true")
     parser.add_argument(
         "--attn-implementation",
         choices=("eager", "sdpa"),
@@ -129,6 +132,8 @@ def main() -> None:
     parser.add_argument("--max-completion-length", type=int, default=64)
     parser.add_argument("--learning-rate", type=float, default=1e-5)
     args = parser.parse_args()
+    if args.disable_thinking and not args.use_chat_template:
+        parser.error("--disable-thinking requires --use-chat-template")
     evidence_dir = args.evidence_dir or Path("artifacts/experiments") / args.experiment_id
     evidence_dir.mkdir(parents=True, exist_ok=True)
     attempt_path = evidence_dir / "attempt.json"
@@ -161,9 +166,16 @@ def main() -> None:
     except ImportError as error:  # pragma: no cover - optional runtime dependency.
         raise RuntimeError("Install the project train extra before running GRPO") from error
 
-    telemetry = RewardTelemetry(num_generations=args.num_generations)
+    telemetry = RewardTelemetry(
+        num_generations=args.num_generations,
+        termination_token_ids=tuple({tokenizer.eos_token_id, tokenizer.pad_token_id} - {None}),
+    )
     diagnostics_callback = make_diagnostics_callback(telemetry, evidence_dir / "grpo-diagnostics.jsonl")
     train_dataset = load_prepared_dataset(args.data_dir / args.train_file)
+    if args.use_chat_template:
+        train_dataset = train_dataset.map(lambda task: {
+            "prompt": _render_prompt(tokenizer, str(task["prompt"]), True, args.disable_thinking)
+        })
     maximum_prompt_tokens = max(
         len(tokenizer.encode(str(task["prompt"]), add_special_tokens=False)) for task in train_dataset
     )
@@ -189,6 +201,8 @@ def main() -> None:
         "gradient_accumulation_steps": args.gradient_accumulation_steps,
         "num_generations": args.num_generations,
         "reward": "binary exact Countdown verifier only",
+        "prompt_format": "chat_template" if args.use_chat_template else "raw",
+        "thinking_disabled": args.disable_thinking,
         "seed": args.seed,
     }
     (evidence_dir / "run-config.json").write_text(json.dumps(run_config, indent=2, sort_keys=True) + "\n")

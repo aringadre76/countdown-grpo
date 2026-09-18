@@ -1,0 +1,2 @@
+{"step": 1, "timestamp": "2026-09-18T17:32:51.980917+00:00", "loss": 1.4114145040512085, "grad_norm": 14.478322982788086, "learning_rate": 0.0002, "entropy": 1.031666375696659, "mean_token_accuracy": 0.6329471245408058, "num_tokens": 692.0, "epoch": 0.001953125}
+{"step": 1, "timestamp": "2026-09-18T17:32:51.982879+00:00", "train_runtime": 6.7796, "train_samples_per_second": 1.18, "train_steps_per_second": 0.148, "total_flos": 2520929914368.0, "train_loss": 1.4114145040512085, "epoch": 0.001953125}

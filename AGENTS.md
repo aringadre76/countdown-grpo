@@ -1,7 +1,7 @@
 # Agent instructions
 
 Status: Current
-Last updated: 2026-09-08
+Last updated: 2026-09-18
 
 This file is the operational contract for Codex, Cursor, and other coding
 agents working in this repository. After context compaction, a long GPU step,
@@ -38,6 +38,11 @@ versions, hardware probes, completions, and metrics. Keep original evidence
 immutable; write any rerun to a new directory under `artifacts/rechecks/`.
 
 ## Research question
+
+The active learning study follows [the 2026-09-18 amendment](docs/amendment-2026-09-18.md).
+The user authorized named alternatives to the historical core settings, including
+supervised initialization. Apply the amendment's budget, dev gates, and confirmation
+rules; retain the original constraints below for claims about the original experiment.
 
 Can `Qwen/Qwen3.5-0.8B-Base`, with no SFT Countdown solutions, improve held-out
 Countdown solving via TRL GRPO and a binary exact reward?
@@ -133,7 +138,8 @@ reward groups.
 
 These are already known. Fix or document them; do not rediscover them slowly.
 
-- `evaluate.py` prints a placeholder and does not generate.
+- `evaluate.py` now generates and saves scored completions; placeholder notes
+  below refer to the original scaffold.
 - `train_grpo.py` uses `per_device_train_batch_size=1`,
   `gradient_accumulation_steps=8`, and `num_generations=4`. Current TRL
   documents divisibility using the effective batch size, so this is 8 and is

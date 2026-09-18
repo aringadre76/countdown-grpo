@@ -1,5 +1,9 @@
 # Reproducing the experiment
 
+For the active extension, read [the 2026-09-18 amendment](amendment-2026-09-18.md)
+and [the new command record](../artifacts/rechecks/2026-09-18-learning/README.md).
+The historical instructions below remain the replay guide for the original study.
+
 This runbook describes the recorded GPU run and the lightweight CPU checks.
 Use a new evidence directory for each rerun. Keep model weights, Hugging Face
 caches, adapters, and virtual environments outside Git.

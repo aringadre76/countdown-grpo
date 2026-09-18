@@ -2,10 +2,10 @@ from countdown_grpo.evaluate import _render_prompt, summarise_records
 
 
 class _ChatTokenizer:
-    def apply_chat_template(self, messages, *, tokenize, add_generation_prompt, chat_template_kwargs):
+    def apply_chat_template(self, messages, *, tokenize, add_generation_prompt, enable_thinking):
         assert tokenize is False
         assert add_generation_prompt is True
-        return f"CHAT[{chat_template_kwargs['enable_thinking']}]:{messages[0]['content']}"
+        return f"CHAT[{enable_thinking}]:{messages[0]['content']}"
 
 
 def test_control_chat_prompt_can_disable_thinking_without_changing_raw_default():

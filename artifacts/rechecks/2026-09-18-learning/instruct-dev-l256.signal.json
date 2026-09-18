@@ -1,0 +1,14 @@
+{
+  "diagnostic_gate_passed": false,
+  "gate": "at least 2 sampled positive tasks and mixed sampled group rate >= 0.10",
+  "input": "artifacts/rechecks/2026-09-18-learning/instruct-dev-l256.jsonl",
+  "records": 80,
+  "sample_counts": [
+    4
+  ],
+  "sampled_mixed_rate": 0.0,
+  "sampled_mixed_tasks": 0,
+  "sampled_positive_tasks": 0,
+  "sampled_tasks": 16,
+  "truncation_rate": 0.4625
+}
