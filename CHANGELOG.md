@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Verified user-supplied official instruct metadata, assembled a separate
+  ignored control folder, and identified its different EOS token. Corrected
+  LFS content-vs-pointer hashing without altering historical evidence.
+- Added confirmation preparation that requires a frozen design, excludes
+  train/dev and historical canonical tasks, and never writes oracle witnesses.
+
 - Added explicitly supervised, train-only witness preparation and completion-only
   LoRA training, with a label-mask audit and saved failed/successful integration
   evidence. Added paired task-level bootstrap helpers for confirmation analysis.

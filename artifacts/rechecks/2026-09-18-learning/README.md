@@ -78,3 +78,14 @@ fresh 512-step run uses the same training command with `--max-steps 512`,
 Its adapter begins again from the untouched base. Before and after tensor hashes
 will verify that the optimizer changed trainable weights. The pilot's evidence
 is not final until `attempt.json` records a terminal status.
+
+## Corrected optional control
+
+The user supplied the blocked metadata files later in the study. Verification
+and the successful tokenizer-only load probe are in
+`control-metadata-recovered.json`. The two `.txt` files contain exact official
+JSON bytes and are linked under their required `.json` filenames in the ignored
+`.control-official-model` folder. Original `.control-model` links remain unchanged.
+The official tokenizer's EOS ID differs from the old reused base tokenizer.
+The corrected control's model generation still requires a new dev probe after
+the active supervised pilot; do not revise historical completions.

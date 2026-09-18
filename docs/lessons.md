@@ -54,6 +54,10 @@ Status: current as of 2026-09-18.
   2026-09-18 Git-blob comparison verified that base and instruct tokenizer files
   differ despite identical model configs and shared vocab/merges. Compare exact
   metadata against the pinned official revision before interpreting a control.
+  For files stored in Git LFS, compare content SHA256 to the official LFS OID,
+  not local bytes to the Git pointer hash. The recovered instruct tokenizer
+  uses EOS 248046 while the historical reused base tokenizer uses 248044.
+  Incorrect termination metadata can invalidate completion/clipping diagnostics.
 
 - Historical GRPO callback truncation defaults were false even when TRL's
   clipped ratio was one. Those callback fields are unreliable: use the saved

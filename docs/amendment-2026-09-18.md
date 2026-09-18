@@ -116,3 +116,20 @@ prompt-prefix mismatches and masked the start of the answer. The label audit
 rejected the run before training. Use separately tokenized prompt/answer IDs
 and explicit -100 prompt labels, matching the generation boundary. Preserve
 the failed integration attempt; require the label probe to pass before training.
+
+## Recovered instruct metadata
+
+The user subsequently supplied all three mismatched metadata files. Their
+pinned official hashes match; tokenizer.json is an LFS object and was verified
+against its content SHA256, correcting the earlier pointer-hash comparison.
+A separately assembled `.control-official-model` preserves the historical folder.
+The official tokenizer uses EOS 248046 rather than the reused base tokenizer's
+248044. This is a verified termination mismatch, not a measured explanation of
+every prior failure. Native no-thinking chat rendering now passes locally.
+
+After the active supervised pilot finishes, repeat candidate A's predeclared
+16-task native-chat dev probe with this corrected folder and the unchanged
+128-token settings; allow 256 only under the existing clipping rule. Save new
+evidence and apply the same binary-GRPO signal gate. Do not interrupt or restart
+the supervised pilot. This packaging repair does not change the study budget,
+confirmation size, arithmetic contract, or checkpoint-selection rules.

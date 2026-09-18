@@ -1,0 +1,38 @@
+{
+  "model_id": "Qwen/Qwen3.5-0.8B",
+  "official_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "source": "User supplied files; pinned HfApi metadata verification",
+  "local_directory": ".control-official-model",
+  "files": {
+    "tokenizer.json": {
+      "bytes": 12807982,
+      "sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "official_lfs_sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "matches": true
+    },
+    "tokenizer_config.json": {
+      "supplied_name": "tokenizer_config.txt",
+      "bytes": 16709,
+      "git_blob_sha1": "fae3ce993e07c092ad024dde45e592379fde91bb",
+      "matches_official_git_blob": true
+    },
+    "model.safetensors.index.json": {
+      "supplied_name": "model.safetensors.index.txt",
+      "bytes": 50900,
+      "git_blob_sha1": "f691cefdb79d73270895ebd6d9594ddcecfc1838",
+      "matches_official_git_blob": true
+    }
+  },
+  "historical_tokenizer_sha256": "fe000e3ed39ed12b8d2481d527d44f93c65d37e87645d2dcc80d1bf9d50d2927",
+  "audit_correction": "The earlier tokenizer Git blob comparison compared actual LFS content to a pointer hash. Use the official LFS SHA256 instead. The base tokenizer still differs from the official instruct tokenizer, now verified by content SHA256.",
+  "weights": "Reuse previously hash-verified official instruct weights without downloading again",
+  "historical_local_directory_unchanged": true,
+  "tokenizer_load_probe": {
+    "tokenizer_class": "Qwen2Tokenizer",
+    "eos_token_id": 248046,
+    "pad_token_id": 248044,
+    "historical_base_tokenizer_eos_token_id": 248044,
+    "native_chat_no_thinking_rendering": "passed",
+    "interpretation": "The official instruct termination token differs from the historical reused base tokenizer; full model generation remains untested with corrected metadata."
+  }
+}

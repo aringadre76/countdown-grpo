@@ -2,6 +2,7 @@
 .venv-rocm/
 .rocm-python-headers/
 .control-model/
+.control-official-model/
 *.egg-info/
 __pycache__/
 *.py[cod]
