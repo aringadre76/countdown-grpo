@@ -21,6 +21,12 @@ ruff check .
 CI runs this same dependency class. It does not install Torch, TRL, or model
 weights.
 
+A fresh local core/dev check on 2026-09-18 passed all 48 tests with Torch, TRL,
+and Transformers absent. Its commands and package versions are saved in
+[cpu-ci-check.json](../artifacts/rechecks/2026-09-18-learning/cpu-ci-check.json).
+The older `.venv` has training libraries; use a new venv to verify dependency
+isolation rather than inferring it from that existing environment.
+
 ## 2. GPU environment used for the evidence
 
 Create a separate environment and install the device-matched wheels supplied

@@ -68,6 +68,18 @@ task-ID order among disagreements, publishing traces and a rubric separating
 format-only repairs from changed legal target-reaching arithmetic. This supports
 a narrow search claim; it cannot establish general reasoning.
 
+Audit rubric: use greedy primary-solve disagreements, including losses, in
+fixed task-ID order. Select at most 20 per seed across both suites. Remove only
+a final `= integer` suffix from the extracted expression, and retain clipping
+rejection and every arithmetic constraint. A baseline that solves after this
+repair is `format_only_repair_sufficient`; legal wrong-target arithmetic changed
+to legal exact arithmetic is `changed_legal_arithmetic_reaches_target`.
+Illegal-to-valid changes are `constraint_or_search_ambiguous`, not automatic
+search evidence. Losses are `lost_primary_solution`. Publish raw traces,
+normalized expressions, verifier categories, and reviewed interpretation.
+Gains surviving this specific normalization exclude that simple suffix repair
+as a sufficient explanation, not every possible formatting confound.
+
 ## Candidate B: supervised initialization (conditional on candidate A failure)
 
 The metadata audit also verified that the local control tokenizer/configuration

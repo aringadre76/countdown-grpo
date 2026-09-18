@@ -1,5 +1,6 @@
 .venv/
 .venv-rocm/
+.venv-cpu-check/
 .rocm-python-headers/
 .control-model/
 .control-official-model/

@@ -82,6 +82,8 @@ Status: current as of 2026-09-18.
   all saved steps and generate plots from those records.
 - Keep CPU tests independent of Torch/TRL. Training extras no longer install a
   generic Torch wheel that could overwrite a device-matched ROCm build.
+  Verify this in a fresh core/dev environment: an older CPU fallback venv may
+  contain training libraries even though the current dependency extra does not.
 - Put every rerun in a new evidence directory; keep original evidence
   immutable and do not commit weights, caches, or credentials.
 

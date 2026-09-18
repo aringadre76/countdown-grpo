@@ -88,6 +88,8 @@ revision `408f70d177020686d34a56bba5952feb45aaaee4`. Canonicalizing by
 created 359,656 train, 44,957 dev, and 44,957 source-test tasks, plus a
 256-task independently generated fresh suite. The split manifest and hashes
 are in [artifacts/data/source_split_manifest.json](artifacts/data/source_split_manifest.json).
+The independent integer-only oracle marked all 449,570 canonical source tasks
+solvable under the contract; see [source_audit.json](artifacts/data/source_audit.json).
 
 ## Reproduce it
 

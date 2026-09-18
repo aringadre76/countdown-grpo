@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Verified 48 tests and lint in a fresh core/dev venv without Torch, TRL, or
+  Transformers. Added strict paired confirmation comparisons and fixed-order
+  trace audits; normalized diagnostics remain outside primary scoring.
+
 - Verified user-supplied official instruct metadata, assembled a separate
   ignored control folder, and identified its different EOS token. Corrected
   LFS content-vs-pointer hashing without altering historical evidence.

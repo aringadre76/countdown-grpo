@@ -1,7 +1,50 @@
 """Paired task-level comparisons; sampled completions are not independent tasks."""
 
+import re
 from collections import defaultdict
 from random import Random
+
+from .verifier import extract_expression, verify_completion
+
+
+def normalized_record(record):
+    """Diagnostic equality-suffix removal only; primary scoring is untouched."""
+    expression = extract_expression(record["raw_completion"])
+    normalized = re.sub(r"\s*=\s*-?\d+\s*$", "", expression) if expression is not None else None
+    result = verify_completion(normalized or "", record["target"], record["nums"],
+                               truncated=bool(record["truncation"]))
+    return {**record, "reward": float(result.valid), "normalized_expression": normalized,
+            "normalized_failure_category": result.reason}
+
+
+def audit_pairs(baseline, trained, *, limit=20):
+    """Fixed-ID greedy disagreements, including losses, without cherry-picking."""
+    base = {row["task_id"]: row for row in baseline if row["generation_mode"] == "greedy"}
+    adapted = {row["task_id"]: row for row in trained if row["generation_mode"] == "greedy"}
+    if set(base) != set(adapted):
+        raise ValueError("audit requires identical task IDs")
+    audit = []
+    for key in sorted(base):
+        left, right = base[key], adapted[key]
+        if left["reward"] == right["reward"]:
+            continue
+        if (left["target"], sorted(left["nums"])) != (right["target"], sorted(right["nums"])):
+            raise ValueError("audit task identity mismatch")
+        normalized_left, normalized_right = normalized_record(left), normalized_record(right)
+        if right["reward"] < left["reward"]:
+            category = "lost_primary_solution"
+        elif normalized_left["reward"] == 1:
+            category = "format_only_repair_sufficient"
+        elif normalized_left["normalized_failure_category"] == "wrong_target":
+            category = "changed_legal_arithmetic_reaches_target"
+        else:
+            category = "constraint_or_search_ambiguous"
+        audit.append({"task_id": key, "target": left["target"], "nums": left["nums"],
+                      "split": left["split"], "rubric_category": category,
+                      "baseline": normalized_left, "trained": normalized_right})
+        if len(audit) == limit:
+            break
+    return audit
 
 
 def task_outcomes(records, mode):

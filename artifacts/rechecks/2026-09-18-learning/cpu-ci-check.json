@@ -1,0 +1,21 @@
+{
+  "purpose": "Fresh core/dev install without training libraries",
+  "commands": [
+    "python3.11 -m venv .venv-cpu-check",
+    ".venv-cpu-check/bin/python -m pip install -e '.[dev]'",
+    ".venv-cpu-check/bin/python -m pytest -q",
+    ".venv-cpu-check/bin/ruff check .",
+    ".venv-cpu-check/bin/python -m pip list --format=json",
+    ".venv-cpu-check/bin/python -c 'import importlib.util; print({k:importlib.util.find_spec(k) is not None for k in [\"torch\",\"trl\",\"transformers\"]})'"
+  ],
+  "exit_code": 0,
+  "pytest_output": "48 passed in 0.11s",
+  "ruff_output": "All checks passed!",
+  "training_library_imports_available": {"torch": false, "trl": false, "transformers": false},
+  "packages": {
+    "amdsmi": "1.2.2", "countdown-grpo": "0.1.0", "iniconfig": "2.3.0",
+    "packaging": "26.3", "pip": "24.0", "pluggy": "1.6.0",
+    "Pygments": "2.21.0", "pytest": "9.1.1", "ruff": "0.16.8", "setuptools": "79.0.1"
+  },
+  "limitation": "Local equivalent of the lightweight CI dependency class; not a claim about a remote GitHub Actions run"
+}
