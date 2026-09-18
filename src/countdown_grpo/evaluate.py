@@ -167,7 +167,9 @@ def _generate(
         output = model.generate(**inputs, **options)
     generated = output[0, inputs["input_ids"].shape[1] :]
     completion_length = int(generated.shape[0])
-    terminated = completion_length > 0 and int(generated[-1]) == tokenizer.eos_token_id
+    terminated = completion_length > 0 and int(generated[-1]) in {
+        tokenizer.eos_token_id, tokenizer.pad_token_id
+    }
     return tokenizer.decode(generated, skip_special_tokens=False), completion_length, not terminated
 
 

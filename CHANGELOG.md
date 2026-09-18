@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Aligned evaluation termination with TRL's EOS-or-PAD rule and added CPU-only
+  token-limit tests for EOS, PAD, and genuinely clipped completions. Base-model
+  dev comparisons are unchanged because its EOS and PAD IDs are identical.
+
 - Verified 48 tests and lint in a fresh core/dev venv without Torch, TRL, or
   Transformers. Added strict paired confirmation comparisons and fixed-order
   trace audits; normalized diagnostics remain outside primary scoring.

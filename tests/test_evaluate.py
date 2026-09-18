@@ -1,4 +1,50 @@
-from countdown_grpo.evaluate import _render_prompt, summarise_records
+from contextlib import nullcontext
+from types import SimpleNamespace
+
+import pytest
+
+from countdown_grpo.evaluate import _generate, _render_prompt, summarise_records
+
+
+@pytest.mark.parametrize("last_token,truncated", [(99, False), (98, False), (7, True)])
+def test_token_limit_termination_matches_trl_eos_and_pad_rule(last_token, truncated):
+    class Input:
+        shape = (1, 2)
+
+        def to(self, device):
+            return self
+
+    class Generated:
+        shape = (2,)
+
+        def __getitem__(self, index):
+            return [5, last_token][index]
+
+    class Output:
+        def __getitem__(self, index):
+            assert index == (0, slice(2, None))
+            return Generated()
+
+    class Tokenizer:
+        eos_token_id = 99
+        pad_token_id = 98
+
+        def __call__(self, prompt, return_tensors):
+            return {"input_ids": Input()}
+
+        def decode(self, tokens, skip_special_tokens):
+            return "5+3+2"
+
+    def generate(**options):
+        assert options["eos_token_id"] == 99
+        assert options["pad_token_id"] == 98
+        return Output()
+
+    result = _generate(model=SimpleNamespace(generate=generate), tokenizer=Tokenizer(),
+                       torch=SimpleNamespace(inference_mode=nullcontext), device="cpu",
+                       prompt="solve", generation_mode="greedy", max_new_tokens=2,
+                       temperature=1, top_p=0.95)
+    assert result == ("5+3+2", 2, truncated)
 
 
 class _ChatTokenizer:
