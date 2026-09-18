@@ -1,0 +1,6 @@
+{
+  "loss_decreased": true,
+  "finite_logged_gradients": true,
+  "dev_legality_at_least_20_percent": true,
+  "passed": true
+}

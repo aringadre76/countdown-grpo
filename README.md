@@ -22,6 +22,13 @@ weight, but its reused base tokenizer files differ from official instruct files.
 Treat historical instruct results as local packaging diagnostics. They do not
 establish the correctly packaged instruct checkpoint's solving ability.
 
+The named supervised extension has passed its 64-step dev gate: 7/80 exact
+completions versus 0/80 for untouched base, with legality rising from 3.75% to
+63.75%. Greedy accuracy was 2/16 tasks and sampled pass@4 was 4/16. A fresh
+512-step run is in progress. These are dev-selection results, not held-out
+confirmation or a GRPO learning claim. See the generated
+[diagnostic report](artifacts/rechecks/2026-09-18-learning/sft-diagnostic-report.md).
+
 The intended AMD GPU path now works in WSL2: Torch sees an RX 7900 XTX and a
 real Qwen3.5 GRPO run completed. The measured result is still negative for
 solving improvement. This was a bounded diagnostic, not a claim about the

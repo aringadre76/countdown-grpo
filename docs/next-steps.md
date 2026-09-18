@@ -7,9 +7,11 @@ records the historical base branch's stopping decision, not a ban on this extens
 
 The two new control probes failed their signal gate, but a metadata audit also
 found mismatched tokenizer files. Treat them as packaging diagnostics, not
-official instruct-model competence measurements. A train-only supervised base
-branch is now running its 64-step diagnostic; advance only under the amendment's
-dev legality/loss gate. No confirmation performance has been measured for it.
+official instruct-model competence measurements. The train-only supervised base
+branch passed its 64-step loss/legality gate and began a fresh 512-step run.
+Evaluate that final adapter on the same dev tasks; exact dev gain is required
+before three fresh independent 512-step seed runs. No confirmation performance
+has been measured for this branch.
 
 The AMD/ROCm path is now functional, so the next question is no longer “can
 the machine train?” It is whether the base policy can produce enough legal

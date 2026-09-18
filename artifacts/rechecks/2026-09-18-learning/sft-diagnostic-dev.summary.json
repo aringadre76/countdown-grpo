@@ -1,0 +1,108 @@
+{
+  "adapter_path": "outputs/learning-sft-diagnostic-s42/final-adapter",
+  "by_number_count": {
+    "3": {
+      "exact_solve_rate": 0.2,
+      "exact_solve_wilson_95": [
+        0.0950510717728987,
+        0.3730569641314825
+      ],
+      "records": 30
+    },
+    "4": {
+      "exact_solve_rate": 0.02,
+      "exact_solve_wilson_95": [
+        0.003539259271646236,
+        0.10495443589637815
+      ],
+      "records": 50
+    }
+  },
+  "by_split": {
+    "dev": {
+      "exact_solve_rate": 0.0875,
+      "exact_solve_wilson_95": [
+        0.04303200178205986,
+        0.16976795508474996
+      ],
+      "records": 80
+    }
+  },
+  "command": [
+    ".venv-rocm/bin/python",
+    "-m",
+    "countdown_grpo.evaluate",
+    "--model",
+    "Qwen/Qwen3.5-0.8B-Base",
+    "--revision",
+    "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "--adapter-path",
+    "outputs/learning-sft-diagnostic-s42/final-adapter",
+    "--data-dir",
+    "artifacts/data",
+    "--splits",
+    "source_dev",
+    "--limit",
+    "16",
+    "--generation-modes",
+    "greedy",
+    "sample",
+    "--samples-per-task",
+    "4",
+    "--max-new-tokens",
+    "128",
+    "--temperature",
+    "1.0",
+    "--top-p",
+    "0.95",
+    "--device",
+    "cuda",
+    "--attn-implementation",
+    "eager",
+    "--experiment-id",
+    "sft-diagnostic-dev-l128-s42",
+    "--output",
+    "artifacts/rechecks/2026-09-18-learning/sft-diagnostic-dev.jsonl"
+  ],
+  "completion_length": {
+    "max": 28,
+    "mean": 20.3125,
+    "min": 17
+  },
+  "completion_tokens": 1625,
+  "exact_solve_rate": 0.0875,
+  "exact_solve_wilson_95": [
+    0.04303200178205986,
+    0.16976795508474996
+  ],
+  "experiment_id": "sft-diagnostic-dev-l128-s42",
+  "failure_categories": {
+    "non_integer_intermediate": 27,
+    "ok": 7,
+    "wrong_number_multiset": 2,
+    "wrong_target": 44
+  },
+  "finished_at": "2026-09-18T17:40:25.745768+00:00",
+  "git_commit": "de1fe13a758c40316f169ba91e4ba944a6cae18c",
+  "invalid_expression_rate": 0.3625,
+  "legal_expression_rate": 0.6375,
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "no_answer_rate": 0.0,
+  "output_jsonl": "artifacts/rechecks/2026-09-18-learning/sft-diagnostic-dev.jsonl",
+  "pass_at_k_by_generation_mode": {
+    "greedy": 0.125,
+    "sample": 0.25
+  },
+  "peak_allocated_bytes": 1892637696,
+  "peak_reserved_bytes": 1981808640,
+  "prompt_format": "raw",
+  "record_count": 80,
+  "requested_attention_implementation": "eager",
+  "revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "started_at": "2026-09-18T17:38:59.811996+00:00",
+  "target_hit_but_illegal_definition": "Selected expression reaches the target under the exact parser while failing the locked Countdown number-use or integer-intermediate rules; diagnostic only, never reward.",
+  "target_hit_but_illegal_rate": 0.0,
+  "thinking_disabled": false,
+  "truncation_rate": 0.0,
+  "wall_time_seconds": 91.75201030199992
+}

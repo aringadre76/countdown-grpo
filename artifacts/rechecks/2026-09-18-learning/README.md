@@ -60,3 +60,21 @@ labels mask prompt tokens and supervise only the answer and termination token.
 The 64-step diagnostic starts again from untouched base weights, not that
 integration adapter. Neither an integration pass nor decreasing training loss
 establishes unseen-task solving gains.
+
+The diagnostic dev result and gate are generated from saved evidence:
+
+```bash
+.venv/bin/python -m countdown_grpo.supervised_report \
+  --baseline artifacts/rechecks/2026-09-18-learning/base-sft-comparison-dev.summary.json \
+  --adapter artifacts/rechecks/2026-09-18-learning/sft-diagnostic-dev.summary.json \
+  --metrics artifacts/rechecks/2026-09-18-learning/sft-diagnostic-s42/metrics.jsonl \
+  --output-prefix artifacts/rechecks/2026-09-18-learning/sft-diagnostic-report
+```
+
+`sft-diagnostic-report.gate.json` records the passed loss/legality gate. The
+fresh 512-step run uses the same training command with `--max-steps 512`,
+`--output-dir outputs/learning-sft-pilot-s42`, and
+`--evidence-dir artifacts/rechecks/2026-09-18-learning/sft-pilot-s42`.
+Its adapter begins again from the untouched base. Before and after tensor hashes
+will verify that the optimizer changed trainable weights. The pilot's evidence
+is not final until `attempt.json` records a terminal status.
