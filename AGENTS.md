@@ -1,7 +1,7 @@
 # Agent instructions
 
 Status: Current
-Last updated: 2026-09-18
+Last updated: 2026-09-22
 
 This file is the operational contract for Codex, Cursor, and other coding
 agents working in this repository. After context compaction, a long GPU step,
@@ -37,12 +37,24 @@ Artifacts, not Markdown prose, are the source of truth for counts, commands,
 versions, hardware probes, completions, and metrics. Keep original evidence
 immutable; write any rerun to a new directory under `artifacts/rechecks/`.
 
+## Current evidence snapshot
+
+The amended supervised-initialization extension completed confirmation for
+seeds 42, 43, and 44 on 2026-09-22. Its generated report and per-seed audit
+traces are in
+[`artifacts/rechecks/2026-09-22-confirmation/report-final/`](artifacts/rechecks/2026-09-22-confirmation/report-final/).
+All three checkpoints improved paired greedy accuracy on both frozen suites.
+This is evidence for the named supervised branch; it does not change the
+historical no-SFT/base/binary-GRPO result. Read the report before drawing a
+project-level conclusion.
+
 ## Research question
 
 The active learning study follows [the 2026-09-18 amendment](docs/amendment-2026-09-18.md).
 The user authorized named alternatives to the historical core settings, including
-supervised initialization. Apply the amendment's budget, dev gates, and confirmation
-rules; retain the original constraints below for claims about the original experiment.
+supervised initialization. That branch is now confirmed across three seeds. Keep it
+separate from the original no-SFT/binary-reward GRPO claim. Any new run needs its own
+predeclared method, budget, dev gate, checkpoint rule, and confirmation design.
 
 Can `Qwen/Qwen3.5-0.8B-Base`, with no SFT Countdown solutions, improve held-out
 Countdown solving via TRL GRPO and a binary exact reward?
@@ -54,7 +66,9 @@ measured negative result is a successful project.
 ## Integrity
 
 - Do not invent metrics, plots, timings, environment details, or successful runs.
-- Do not use supervised Countdown solutions in the core experiment.
+- Do not use supervised Countdown solutions for claims about the historical
+  no-SFT core experiment. A separately labeled extension may use only train-side
+  solutions under the dated amendment.
 - Do not silently switch to an instruct checkpoint.
 - Do not silently replace binary outcome reward with shaped reward.
 - Do not tune hyperparameters on the final held-out test set.
@@ -110,19 +124,23 @@ or the model.
 Complete Must before Should. Start Stretch only if diagnostics show mixed
 reward groups.
 
-**Must ship**
+**Foundation gates (completed; evidence remains in artifacts)**
 
 1. Integer-only verifier with adversarial tests. `pytest` passes without a GPU.
 2. Independent solvability oracle that never feeds solutions to the model.
 3. Canonical `(target, sorted nums)` train/dev/test splits with no leakage.
-4. Real untouched-base baseline JSONL. The current `evaluate.py` is a placeholder.
+4. Real untouched-base baseline JSONL and scored evaluation tooling.
 5. Environment manifest written from observed commands.
 6. One real GRPO smoke on `Qwen/Qwen3.5-0.8B-Base`, or the exact blocker.
 7. README matches evidence, including negative-result framing if needed.
 8. CPU CI without Torch/TRL. `local main` equals `origin/main`. `git status --short`
    is empty.
 
-**Should ship if smoke is healthy**
+The original GPU diagnostic and frozen base evaluation are complete. The
+supervised extension's three-seed source/fresh confirmation is also complete;
+the protocol amendment now governs follow-up work.
+
+**Historical GRPO diagnostic gates**
 
 - About 50-100 diagnostic GRPO steps.
 - Logs for mean reward, reward variance, positive-completion rate,
@@ -138,8 +156,8 @@ reward groups.
 
 These are already known. Fix or document them; do not rediscover them slowly.
 
-- `evaluate.py` now generates and saves scored completions; placeholder notes
-  below refer to the original scaffold.
+- `evaluate.py` generates and saves scored completions with a summary that
+  records command, prompt, raw output, verifier result, truncation, and compute.
 - `train_grpo.py` uses `per_device_train_batch_size=1`,
   `gradient_accumulation_steps=8`, and `num_generations=4`. Current TRL
   documents divisibility using the effective batch size, so this is 8 and is

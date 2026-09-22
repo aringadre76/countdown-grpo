@@ -88,7 +88,7 @@ def write_svg(path: Path, series: list[tuple[str, float | None]]) -> None:
         [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
             '<rect width="100%" height="100%" fill="white"/>',
-            '<text x="10" y="22" font-size="18" font-weight="bold">Saved-evidence exact solve rates</text>',
+            '<text x="10" y="22" font-size="18" font-weight="bold">Historical CPU smoke only: exact solve rates</text>',
             *bars,
             "</svg>",
         ]
@@ -118,7 +118,12 @@ def generate_report(
     adapter = _load(adapter_path) if adapter_path is not None else None
 
     lines = [
-        "# Countdown GRPO evidence report",
+        "# Historical CPU-only GRPO integration report",
+        "",
+        (
+            "Scope: this is the early CPU scaffold check, not the RX 7900 XTX training or frozen confirmation result. "
+            "The current three-seed GPU confirmation is in `artifacts/rechecks/2026-09-22-confirmation/README.md`."
+        ),
         "",
         (
             "Generated from the saved artifacts listed below. It reports recorded values only; "

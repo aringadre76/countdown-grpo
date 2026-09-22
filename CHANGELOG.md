@@ -2,10 +2,24 @@
 
 ## Unreleased
 
+- Completed the frozen source/fresh confirmation for supervised seeds 42, 43,
+  and 44 on the RX 7900 XTX. All three saved 2,560 records with zero
+  truncation; paired task bootstrap, normalization checks, trace audits, and an
+  evidence-generated SVG are in `artifacts/rechecks/2026-09-22-confirmation/`.
+- Recorded an observed 2026-09-22 WSL/ROCm manifest, including Torch/HIP
+  versions, `gfx1100`, free/total device memory, an on-device tensor probe, and
+  the `rocm-smi` diagnostic.
+- Updated the README, reproduction steps, hardware notes, lessons, next-step
+  recommendation, and agent routing with the completed confirmation result.
+- Added aggregate normalized comparisons, fixed-order audit counts, and a
+  four-panel SVG to the confirmation report generator. CPU validation reached
+  52 passing tests and Ruff clean.
+
 - Completed three 512-step supervised LoRA seeds and their fixed dev checks;
   prepared a leakage-safe 256-source/256-fresh confirmation suite and recorded
-  the untouched-base confirmation (5/2,560 exact). Paused the seed-42 adapter
-  confirmation at the user's request before it completed.
+  the untouched-base confirmation (5/2,560 exact). The full adapter
+  confirmation was subsequently completed on all three seeds; see the dated
+  evidence above.
 
 - Aligned evaluation termination with TRL's EOS-or-PAD rule and added CPU-only
   token-limit tests for EOS, PAD, and genuinely clipped completions. Base-model

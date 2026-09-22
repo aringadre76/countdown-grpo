@@ -1,4 +1,6 @@
-# Countdown GRPO evidence report
+# Historical CPU-only GRPO integration report
+
+Scope: this is the early CPU scaffold check, not the RX 7900 XTX training or frozen confirmation result. The current three-seed GPU confirmation is in `artifacts/rechecks/2026-09-22-confirmation/README.md`.
 
 Generated from the saved artifacts listed below. It reports recorded values only; unrun stages are not filled in.
 
@@ -12,8 +14,8 @@ Generated from the saved artifacts listed below. It reports recorded values only
 
 ## Observed environment
 
-- Python 3.11.15; Torch 2.14.0+cpu; CUDA available: False.
-- ROCm probe: ERROR:root:Driver not initialized (amdgpu not found in modules)
+- Python 3.11.15; Torch 2.14.0+cpu; CUDA available: False; device: not reported; HIP: None.
+- HSA probe: `rocminfo` returned 0 and reported the RX 7900 XTX; `rocm-smi` remains non-diagnostic under this WSL session.
 
 ## Untouched-base baseline
 
@@ -21,20 +23,22 @@ Generated from the saved artifacts listed below. It reports recorded values only
 - Source-held-out: 0.00%; fresh-task: 0.00%.
 - Failure categories: `{"no_answer": 7, "non_integer_intermediate": 7, "syntax_error": 1, "truncated": 47, "unsupported_syntax": 9, "wrong_number_multiset": 9}`
 
-## GRPO smoke
+## GRPO diagnostic
 
 - Status: completed; optimizer steps: 1; training loss: 0.0.
-- Mean reward: 0.0; reward variance: 0.0; mixed-group rate: 0.0; all-zero-group rate: 1.0.
+- Aggregated over 1 steps and 8 rollouts: mean step reward 0.000000; mean step reward variance 0.000000; positive-completion rate 0.000000.
+- Mixed-group rate: 0.000000; all-zero-group rate: 1.000000; all-one-group rate: 0.000000; truncation rate: 0.000000.
+- Positive steps: `[]`; mean completion length: 36.50 characters.
 - Failure categories: `{"malformed_answer": 2, "no_answer": 1, "syntax_error": 1, "unsupported_syntax": 4}`
 
 ## Smoke-adapter comparison
 
 - Records: 80; exact solve rate: 0.00%; legal expression rate: 0.00%.
-- This one-step all-zero-reward smoke is an integration comparison, not a learning result.
+- This 25-step sparse-signal adapter comparison is not evidence of learning improvement; source and fresh breakdowns remain the deciding evidence.
 
 ## Interpretation
 
-The smoke had no mixed reward groups, so it provided no group-relative learning signal. It confirms only that the CPU components run together; it cannot support a claim of improved Countdown solving.
+The GPU smoke confirms that Qwen3.5, the observed LoRA targets, Triton, the binary reward, and TRL GRPO run together. The 25-step diagnostic had one positive step and 24 all-zero steps, so there was no sustained usable group-relative signal. The run does not support a claim of improved Countdown solving.
 
 ## Inputs
 

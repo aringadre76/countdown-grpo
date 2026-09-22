@@ -1,0 +1,120 @@
+{
+  "adapter_path": "outputs/learning-sft-pilot-s43/final-adapter",
+  "by_number_count": {
+    "3": {
+      "exact_solve_rate": 0.1910204081632653,
+      "exact_solve_wilson_95": [
+        0.1699860445080308,
+        0.21398656272603445
+      ],
+      "records": 1225
+    },
+    "4": {
+      "exact_solve_rate": 0.03220973782771536,
+      "exact_solve_wilson_95": [
+        0.023999859061348543,
+        0.04310402260349782
+      ],
+      "records": 1335
+    }
+  },
+  "by_split": {
+    "fresh_confirmation": {
+      "exact_solve_rate": 0.06015625,
+      "exact_solve_wilson_95": [
+        0.04839941283037781,
+        0.07454525275604397
+      ],
+      "records": 1280
+    },
+    "source_confirmation": {
+      "exact_solve_rate": 0.15625,
+      "exact_solve_wilson_95": [
+        0.13739056560855847,
+        0.1771665442636006
+      ],
+      "records": 1280
+    }
+  },
+  "command": [
+    ".venv-rocm/bin/python",
+    "-m",
+    "countdown_grpo.evaluate",
+    "--model",
+    "Qwen/Qwen3.5-0.8B-Base",
+    "--revision",
+    "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "--adapter-path",
+    "outputs/learning-sft-pilot-s43/final-adapter",
+    "--data-dir",
+    "artifacts/rechecks/2026-09-18-learning/confirmation",
+    "--splits",
+    "source_confirmation",
+    "fresh_confirmation",
+    "--generation-modes",
+    "greedy",
+    "sample",
+    "--samples-per-task",
+    "4",
+    "--max-new-tokens",
+    "128",
+    "--temperature",
+    "1.0",
+    "--top-p",
+    "0.95",
+    "--device",
+    "cuda",
+    "--attn-implementation",
+    "eager",
+    "--seed",
+    "42",
+    "--experiment-id",
+    "sft-confirmation-l128-s43",
+    "--output",
+    "artifacts/rechecks/2026-09-22-confirmation/sft-confirmation-s43.jsonl",
+    "--summary-output",
+    "artifacts/rechecks/2026-09-22-confirmation/sft-confirmation-s43.summary.json"
+  ],
+  "completion_length": {
+    "max": 27,
+    "mean": 19.39609375,
+    "min": 15
+  },
+  "completion_tokens": 49654,
+  "exact_solve_rate": 0.108203125,
+  "exact_solve_wilson_95": [
+    0.09675166358399112,
+    0.1208286617912323
+  ],
+  "experiment_id": "sft-confirmation-l128-s43",
+  "failure_categories": {
+    "division_by_zero": 3,
+    "non_integer_intermediate": 405,
+    "ok": 277,
+    "wrong_number_multiset": 33,
+    "wrong_target": 1842
+  },
+  "finished_at": "2026-09-22T19:36:47.420146+00:00",
+  "git_commit": "a60c388db9259c4eb1413caef46cc8acff03977d",
+  "invalid_expression_rate": 0.172265625,
+  "legal_expression_rate": 0.827734375,
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "no_answer_rate": 0.0,
+  "output_jsonl": "artifacts/rechecks/2026-09-22-confirmation/sft-confirmation-s43.jsonl",
+  "pass_at_k_by_generation_mode": {
+    "greedy": 0.142578125,
+    "sample": 0.255859375
+  },
+  "peak_allocated_bytes": 1892670976,
+  "peak_reserved_bytes": 1981808640,
+  "prompt_format": "raw",
+  "record_count": 2560,
+  "requested_attention_implementation": "eager",
+  "revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "started_at": "2026-09-22T19:02:10.829705+00:00",
+  "target_hit_but_illegal_definition": "Selected expression reaches the target under the exact parser while failing the locked Countdown number-use or integer-intermediate rules; diagnostic only, never reward.",
+  "target_hit_but_illegal_rate": 0.000390625,
+  "thinking_disabled": false,
+  "truncation_rate": 0.0,
+  "wall_time_seconds": 2154.509627734
+}

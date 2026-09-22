@@ -1,6 +1,6 @@
 # Lessons and durable constraints
 
-Status: current as of 2026-09-18.
+Status: current as of 2026-09-22.
 
 ## GPU recovery
 
@@ -35,13 +35,40 @@ Status: current as of 2026-09-18.
   template is used with thinking disabled. In the recorded 32-token control,
   this still yielded 0/80 exact solves and mostly truncation or unsupported
   syntax. The one-step control GRPO smoke had two all-zero reward groups.
-- The adapter produced one source-held-out exact completion and zero fresh
-  completions. The corresponding base completion used an unsupported `=`
+- The historical 25-step GRPO adapter produced one source-held-out exact
+  completion and zero fresh completions. The corresponding base completion used an unsupported `=`
   suffix, so the cautious interpretation is possible output-format change;
   arithmetic-search improvement is unestablished.
 - Do not call a lower loss or a single exact completion emergent reasoning.
   Keep source, fresh, pass@1, pass@k, failure categories, and raw completions
   separate.
+
+## Frozen supervised confirmation
+
+- The named completion-only SFT branch improved greedy accuracy over the
+  untouched base on both source-held-out and independently generated fresh
+  tasks for seeds 42, 43, and 44. Preserve its supervised provenance: this is
+  not evidence that the original no-SFT GRPO branch learned.
+- All three adapter confirmation runs produced 2,560 scored records with no
+  truncation at 128 new tokens. Raw outputs, commands, failure categories,
+  token totals, timestamps, and VRAM peaks are in
+  `artifacts/rechecks/2026-09-22-confirmation/`.
+- Task-level paired bootstrap is essential here. Five generations per task
+  improve precision within each task, but the puzzle remains the unit of
+  uncertainty. The aggregate interval conditions on three observed training
+  seeds and does not estimate seed-to-seed population variability.
+- Exact solving gains remain after stripping only a final `= integer` from
+  both base and trained completions, then rechecking under the same verifier.
+  This excludes that single formatting repair as a sufficient explanation.
+- The fixed trace audit found direct legal-arithmetic changes, but most
+  selected disagreements remained ambiguous. Since `fresh-` IDs sort before
+  `source-` IDs, the first 20 disagreements per seed all came from the fresh
+  suite. Keep that frozen result and predeclare stratified selection if a
+  future study needs direct traces from both suites.
+- In WSL2, `rocm-smi` can report that `amdgpu` is not initialized while
+  `rocminfo` and Torch still identify the RX 7900 XTX. A saved on-device
+  tensor probe plus a completed model evaluation are stronger evidence than
+  the `rocm-smi` message alone.
 
 ## Engineering
 

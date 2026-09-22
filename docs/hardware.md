@@ -1,11 +1,14 @@
 # Hardware and observed environment
 
-The 2026-09-18 extension rechecked the RX 7900 XTX, the same recorded
-Torch/HIP build, and absence of a named llama.cpp server. Its observed manifest
-is [environment.json](../artifacts/rechecks/2026-09-18-learning/environment.json).
+The frozen three-seed confirmation ran on the RX 7900 XTX on 2026-09-22. The
+fresh post-run observations are in
+[environment.json](../artifacts/rechecks/2026-09-22-confirmation/environment.json).
+The earlier 2026-09-18 environment snapshot remains in
+[the learning evidence](../artifacts/rechecks/2026-09-18-learning/environment.json).
 
-Status: GPU path verified on 2026-09-08 in WSL2. The intended device and the
-device used for the recorded run are both an AMD Radeon RX 7900 XTX.
+Status: GPU path verified again during the 2026-09-22 full confirmation runs in
+WSL2. Torch executed a tensor kernel and loaded the pinned Qwen base plus each
+adapter on the intended AMD Radeon RX 7900 XTX.
 
 | Item | Observed value | Evidence |
 | --- | --- | --- |
@@ -19,15 +22,23 @@ device used for the recorded run are both an AMD Radeon RX 7900 XTX.
 | Torch CUDA view | available, one device | manifest |
 | llama.cpp server | no matching process observed | manifest |
 
-The canonical GPU manifest is
-[environment-rocm-torch.json](../artifacts/rechecks/2026-09-08-gpu-recovery/environment-rocm-torch.json).
+The current manifest captured `gfx1100`, 25,708,240,896 bytes total device
+memory, and 23,255,171,072 bytes free at capture (21.66 GiB free of 23.94 GiB).
+Its on-device `sum(arange(1024) ** 2)` probe returned `357389824.0` on
+`cuda:0`. The three adapter confirmations each recorded a peak of
+1,892,670,976 allocated bytes and 1,981,808,640 reserved bytes. Those runs
+each completed 2,560 generations without truncation.
+
+The detailed GPU-recovery manifest is
+[environment-rocm-torch.json](../artifacts/rechecks/2026-09-08-gpu-recovery/environment-rocm-torch.json);
+the current post-confirmation snapshot is
+[environment.json](../artifacts/rechecks/2026-09-22-confirmation/environment.json).
 `rocminfo` returned successfully and reported the GPU. `rocm-smi` printed
 `Driver not initialized (amdgpu not found in modules)`, which is a WSL
 userspace caveat here rather than proof that the GPU was unavailable: Torch
-successfully ran a bf16 autograd test and the Qwen preflight, baseline, and
-GRPO jobs on `cuda:0`. The recorded run therefore uses Torch and `rocminfo`
-as the authoritative training observations, while retaining the `rocm-smi`
-output for completeness.
+reported one available AMD device, ran a tensor operation, and completed the
+Qwen evaluations on `cuda:0`. The manifest preserves both the diagnostic and
+the successful Torch/HSA evidence.
 
 ## Two environments
 

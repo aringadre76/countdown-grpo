@@ -56,7 +56,25 @@ def capture_manifest() -> dict[str, Any]:
             "device_count": torch.cuda.device_count(),
         }
         if torch.cuda.is_available():
-            torch_info["device_name"] = torch.cuda.get_device_name(0)
+            device = torch.device("cuda:0")
+            properties = torch.cuda.get_device_properties(device)
+            free_bytes, total_bytes = torch.cuda.mem_get_info(device)
+            values = torch.arange(1024, dtype=torch.float32, device=device)
+            tensor_result = (values * values).sum()
+            torch_info.update(
+                {
+                    "device_name": torch.cuda.get_device_name(device),
+                    "device_architecture": getattr(properties, "gcnArchName", None),
+                    "device_total_memory_bytes": properties.total_memory,
+                    "free_memory_at_capture_bytes": free_bytes,
+                    "total_memory_at_capture_bytes": total_bytes,
+                    "tensor_probe": {
+                        "operation": "sum(arange(1024) ** 2)",
+                        "result": tensor_result.item(),
+                        "device": str(tensor_result.device),
+                    },
+                }
+            )
     except ImportError:
         torch_info = {"version": None, "cuda_available": False, "reason": "torch not installed"}
 

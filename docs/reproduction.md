@@ -1,8 +1,9 @@
 # Reproducing the experiment
 
-For the active extension, read [the 2026-09-18 amendment](amendment-2026-09-18.md)
-and [the new command record](../artifacts/rechecks/2026-09-18-learning/README.md).
-The historical instructions below remain the replay guide for the original study.
+The final supervised-initialization confirmation and its commands are recorded
+in [`artifacts/rechecks/2026-09-22-confirmation/README.md`](../artifacts/rechecks/2026-09-22-confirmation/README.md).
+The 2026-09-18 amendment authorizes this branch. The earlier sections retain
+the setup and replay steps for the original base/no-SFT/GRPO experiment.
 
 This runbook describes the recorded GPU run and the lightweight CPU checks.
 Use a new evidence directory for each rerun. Keep model weights, Hugging Face
@@ -251,3 +252,84 @@ Observed control result: 0/80 exact solves (0/40 source and 0/40 fresh),
 control GRPO smoke also completed on the RX 7900 XTX; it produced two all-zero
 reward groups and zero positive completions. These are control observations,
 not a replacement for the locked base-model result.
+
+## 10. Frozen three-seed supervised confirmation
+
+This is a named supervised-initialization study, not the original no-SFT GRPO
+claim. Its frozen configuration is
+[`frozen-design.json`](../artifacts/rechecks/2026-09-18-learning/frozen-design.json).
+Do not regenerate or modify the confirmation tasks when reproducing the saved
+comparison. The source and fresh suites, each 256 tasks, are in
+`artifacts/rechecks/2026-09-18-learning/confirmation/`.
+
+Use the existing project ROCm venv, cached pinned base revision, and prepared
+train-only solution file. The command defaults are recorded in each seed's
+`attempt.json`; this loop expresses the three saved command variants:
+
+```bash
+export HF_HUB_OFFLINE=1
+export C_INCLUDE_PATH="$PWD/.rocm-python-headers/usr/include/python3.11:$PWD/.rocm-python-headers/usr/include"
+for seed in 42 43 44; do
+  python -m countdown_grpo.train_sft \
+    --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
+    --train-file artifacts/rechecks/2026-09-18-learning/data/supervised-train.jsonl \
+    --output-dir "outputs/learning-sft-pilot-s${seed}" \
+    --evidence-dir "artifacts/rechecks/2026-09-18-learning/sft-pilot-s${seed}" \
+    --max-steps 512 --seed "$seed"
+done
+```
+
+This uses the predeclared 4,096 train-only targets, completion-only loss,
+bf16 LoRA, maximum sequence length 256, rank 16 / alpha 32 / dropout 0.05,
+batch 1, accumulation 8, learning rate `2e-4`, linear schedule, and eager
+attention. Verify the saved label-mask and weight-hash probes before treating
+the run as complete. Keep generated solution targets out of evaluation prompts.
+
+The untouched-base confirmation was already run and saved as
+`artifacts/rechecks/2026-09-18-learning/confirmation-base.jsonl`. Each adapter
+evaluation uses the same paired generation seed (42), frozen task order, raw
+prompt, one greedy plus four sampled completions, and a 128-token limit:
+
+```bash
+for seed in 42 43 44; do
+  python -m countdown_grpo.evaluate \
+    --model Qwen/Qwen3.5-0.8B-Base \
+    --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
+    --adapter-path "outputs/learning-sft-pilot-s${seed}/final-adapter" \
+    --data-dir artifacts/rechecks/2026-09-18-learning/confirmation \
+    --splits source_confirmation fresh_confirmation \
+    --generation-modes greedy sample --samples-per-task 4 \
+    --max-new-tokens 128 --temperature 1.0 --top-p 0.95 \
+    --device cuda --attn-implementation eager --seed 42 \
+    --experiment-id "sft-confirmation-l128-s${seed}" \
+    --output "artifacts/rechecks/2026-09-22-confirmation/sft-confirmation-s${seed}.jsonl" \
+    --summary-output "artifacts/rechecks/2026-09-22-confirmation/sft-confirmation-s${seed}.summary.json"
+done
+```
+
+For a new evaluation, change the output paths and experiment IDs to a new
+directory under `artifacts/rechecks/`. The evaluator records the command,
+revision, timestamps, raw outputs, verifier categories, completion tokens,
+truncation, and peak allocated/reserved device memory.
+
+Regenerate paired task bootstrap intervals, normalized comparisons, fixed-order
+trace audits, and the SVG using the CPU-only environment. Use a new empty report
+directory because the report command refuses to overwrite evidence:
+
+```bash
+.venv/bin/python -m countdown_grpo.confirmation_report \
+  --baseline artifacts/rechecks/2026-09-18-learning/confirmation-base.jsonl \
+  --trained artifacts/rechecks/2026-09-22-confirmation/sft-confirmation-s42.jsonl \
+    artifacts/rechecks/2026-09-22-confirmation/sft-confirmation-s43.jsonl \
+    artifacts/rechecks/2026-09-22-confirmation/sft-confirmation-s44.jsonl \
+  --freeze artifacts/rechecks/2026-09-18-learning/frozen-design.json \
+  --output-dir artifacts/rechecks/<NEW_DATE>/report
+```
+
+The saved analysis is
+[`report-final`](../artifacts/rechecks/2026-09-22-confirmation/report-final/).
+It reports greedy pass@1 and sampled pass@4 separately, pairs outcomes by task,
+and conditions the aggregate interval on the three observed seeds. The selected
+trace audit has up to 20 disagreements per seed in lexical task-ID order; all
+60 selected records happened to be from the fresh suite because `fresh-` sorts
+before `source-`. The saved raw audit must remain unchanged.
