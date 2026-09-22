@@ -1,0 +1,14 @@
+{
+  "diagnostic_gate_passed": true,
+  "gate": "at least 2 sampled positive tasks and mixed sampled group rate >= 0.10",
+  "input": "artifacts/rechecks/2026-09-22-sft-init-grpo/signal-s42-t1.jsonl",
+  "records": 160,
+  "sample_counts": [
+    4
+  ],
+  "sampled_mixed_rate": 0.34375,
+  "sampled_mixed_tasks": 11,
+  "sampled_positive_tasks": 11,
+  "sampled_tasks": 32,
+  "truncation_rate": 0.0
+}

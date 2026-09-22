@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import traceback
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -64,6 +65,26 @@ def _load_model_and_tokenizer(
     ).to(torch_device)
     model.config.use_cache = False
     return model, tokenizer, torch, torch_device, resolved_revision
+
+
+def _install_attempt_failure_recorder(attempt: dict[str, Any], attempt_path: Path) -> None:
+    """Persist setup failures too, not only exceptions inside trainer.train()."""
+    previous_hook = sys.excepthook
+
+    def record_failure(error_type: type[BaseException], error: BaseException, tb: Any) -> None:
+        attempt.update(
+            {
+                "status": "failed",
+                "finished_at": datetime.now(UTC).isoformat(),
+                "error_type": error_type.__name__,
+                "error": str(error),
+                "traceback": "".join(traceback.format_exception(error_type, error, tb)),
+            }
+        )
+        attempt_path.write_text(json.dumps(attempt, indent=2, sort_keys=True) + "\n")
+        previous_hook(error_type, error, tb)
+
+    sys.excepthook = record_failure
 
 
 def make_diagnostics_callback(
@@ -196,6 +217,7 @@ def main() -> None:
         "command": [recorded_python, "-m", "countdown_grpo.train_grpo", *sys.argv[1:]],
     }
     attempt_path.write_text(json.dumps(attempt, indent=2, sort_keys=True) + "\n")
+    _install_attempt_failure_recorder(attempt, attempt_path)
 
     generation_batch = validate_grpo_batch(
         per_device_train_batch_size=args.per_device_train_batch_size,
@@ -230,6 +252,9 @@ def main() -> None:
         peft_type = getattr(starting_config.peft_type, "value", starting_config.peft_type)
         if peft_type != "LORA":
             raise ValueError(f"only a LoRA starting adapter is supported, got {peft_type!r}")
+        task_type = getattr(starting_config.task_type, "value", starting_config.task_type)
+        if task_type != "CAUSAL_LM":
+            raise ValueError(f"starting adapter must have task_type='CAUSAL_LM', got {task_type!r}")
         adapter_targets = starting_config.target_modules
         if isinstance(adapter_targets, str):
             raise ValueError("regex/string adapter target modules are not supported for warm-start validation")
@@ -242,9 +267,12 @@ def main() -> None:
         )
         if not any(parameter.requires_grad for parameter in model.parameters()):
             raise ValueError("the loaded starting adapter has no trainable parameters")
+        adapter_weights_path = args.adapter_path / "adapter_model.safetensors"
+        if not adapter_weights_path.is_file():
+            raise FileNotFoundError(f"starting adapter weights do not exist: {adapter_weights_path}")
         starting_adapter = {
             "path": str(args.adapter_path),
-            "sha256": file_sha256(args.adapter_path / "adapter_model.safetensors"),
+            "sha256": file_sha256(adapter_weights_path),
             "base_model_name_or_path": adapter_base,
             "peft_type": str(peft_type),
             "target_modules": target_modules,

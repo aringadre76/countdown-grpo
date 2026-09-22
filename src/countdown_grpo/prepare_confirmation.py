@@ -48,6 +48,20 @@ def select_source(tasks, forbidden, count, seed):
     return sorted(selected, key=lambda task: task["task_id"])
 
 
+def frozen_confirmation_size(freeze):
+    """Return the suite size from either supported frozen-design schema."""
+    if freeze.get("status") != "frozen":
+        raise ValueError("a frozen confirmation design is required")
+    if "confirmation_tasks_per_suite" in freeze:
+        return freeze["confirmation_tasks_per_suite"]
+    confirmation = freeze.get("confirmation", freeze)
+    source_count = confirmation.get("source_tasks")
+    fresh_count = confirmation.get("fresh_tasks")
+    if source_count != fresh_count or source_count is None:
+        raise ValueError("frozen source and fresh confirmation sizes must match")
+    return source_count
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", type=Path, default=Path("artifacts/data"))
@@ -59,7 +73,7 @@ def main():
     parser.add_argument("--seed", type=int, default=20260918)
     args = parser.parse_args()
     freeze = json.loads(args.freeze.read_text())
-    if freeze.get("status") != "frozen" or args.size != freeze["confirmation_tasks_per_suite"]:
+    if args.size != frozen_confirmation_size(freeze):
         raise ValueError("a matching frozen confirmation design is required")
     # Permit callers to create the destination directory up front, but never
     # overwrite an existing artifact or manifest.
