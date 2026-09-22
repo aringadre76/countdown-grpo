@@ -43,6 +43,13 @@ tokenizer metadata did not match the official instruct revision.
 
 ## Recommended next experiment
 
+The SFT-initialized GRPO follow-up now has a frozen method, train-only signal
+gate, new confirmation design, and hard budget in
+[`amendment-2026-09-22-sft-init-grpo.md`](amendment-2026-09-22-sft-init-grpo.md).
+No new probe or GRPO result is recorded yet. Follow that frozen design; do not
+use the already reported supervised confirmation outcomes to select a GRPO
+checkpoint.
+
 Test binary GRPO initialized from the supervised checkpoint. First score
 train-only rollouts from the SFT policy using the frozen binary verifier and
 measure positive completions, mixed reward groups, and truncation. Do not use

@@ -3,7 +3,9 @@
 Status: Current
 Last updated: 2026-09-18
 
-The active extension is governed by [the dated learning-study amendment](amendment-2026-09-18.md).
+The active extension is governed by [the dated learning-study amendment](amendment-2026-09-18.md)
+and the [2026-09-22 SFT-initialized GRPO addendum](amendment-2026-09-22-sft-init-grpo.md)
+for that separately labeled follow-up.
 It authorizes named alternative strategies while preserving this original protocol
 and its results as historical evidence. Where extension rules conflict, use the
 amendment for new experiments and this document for original-experiment claims.

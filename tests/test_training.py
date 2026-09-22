@@ -3,6 +3,7 @@ import pytest
 from countdown_grpo.training import (
     RewardTelemetry,
     select_lora_target_suffixes,
+    validate_adapter_target_suffixes,
     validate_grpo_batch,
 )
 
@@ -39,6 +40,15 @@ def test_live_target_selection_requires_linear_and_full_attention_families():
     ]
 
 
+def test_saved_adapter_targets_must_exist_in_live_base_modules():
+    names = ["layers.0.attn.q_proj", "layers.0.mlp.gate_proj", "layers.0.mlp.up_proj"]
+    assert validate_adapter_target_suffixes(["up_proj", "q_proj", "gate_proj"], names) == [
+        "gate_proj", "q_proj", "up_proj"
+    ]
+    with pytest.raises(ValueError, match="absent from the live model"):
+        validate_adapter_target_suffixes(["q_proj", "missing_proj"], names)
+
+
 def test_binary_reward_telemetry_reports_group_signal_and_failures():
     telemetry = RewardTelemetry(num_generations=2)
     rewards = telemetry(
@@ -59,11 +69,12 @@ def test_telemetry_uses_tokens_to_detect_clipping_and_unknown_is_not_false():
     telemetry = RewardTelemetry(num_generations=2, termination_token_ids=(99,))
     rewards = telemetry(
         ["2 + 3", "2 + 3"], target=[5, 5], nums=[[2, 3], [2, 3]],
-        completion_ids=[[1, 2, 99], [1, 2, 3]],
+        completion_ids=[[1, 2, 99], [1, 2, 3]], task_id=["train-a", "train-b"],
     )
     assert rewards == [1.0, 0.0]
     event = telemetry.pop_events()[0]
     assert event["truncation_rate"] == 0.5
     assert event["rollouts"][1]["failure_category"] == "truncated"
+    assert [row["task_id"] for row in event["rollouts"]] == ["train-a", "train-b"]
     telemetry(["2 + 3", "2 + 3"], target=[5, 5], nums=[[2, 3], [2, 3]])
     assert telemetry.pop_events()[0]["truncation_rate"] is None

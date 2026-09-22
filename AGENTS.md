@@ -48,9 +48,17 @@ This is evidence for the named supervised branch; it does not change the
 historical no-SFT/base/binary-GRPO result. Read the report before drawing a
 project-level conclusion.
 
+A separate SFT-initialized binary-GRPO follow-up is predeclared in
+[`docs/amendment-2026-09-22-sft-init-grpo.md`](docs/amendment-2026-09-22-sft-init-grpo.md).
+Its frozen design is in
+[`artifacts/rechecks/2026-09-22-sft-init-grpo/frozen-design.json`](artifacts/rechecks/2026-09-22-sft-init-grpo/frozen-design.json).
+As of the freeze, no signal probe or GRPO run has been recorded for that
+follow-up; do not infer its outcome from the earlier SFT evaluation.
+
 ## Research question
 
-The active learning study follows [the 2026-09-18 amendment](docs/amendment-2026-09-18.md).
+The active learning study follows [the 2026-09-18 amendment](docs/amendment-2026-09-18.md)
+and, for the SFT-initialized GRPO branch, its [2026-09-22 addendum](docs/amendment-2026-09-22-sft-init-grpo.md).
 The user authorized named alternatives to the historical core settings, including
 supervised initialization. That branch is now confirmed across three seeds. Keep it
 separate from the original no-SFT/binary-reward GRPO claim. Any new run needs its own

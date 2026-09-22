@@ -1,0 +1,128 @@
+{
+  "status": "frozen",
+  "frozen_at": "2026-09-22T20:59:56Z",
+  "design_commit": "7c05eb8f538c62b56b676f849d4bafc4e074d048",
+  "experiment_id": "qwen35-08b-sft-init-binary-grpo-2026-09-22",
+  "branch": "binary exact-reward GRPO continued from three frozen supervised LoRA adapters",
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "model_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "arithmetic_contract": {
+    "operators": ["+", "-", "*", "/"],
+    "parentheses": true,
+    "every_input_number_exactly_once": true,
+    "exact_rational_checking": true,
+    "integer_intermediate_and_final_values": true,
+    "primary_reward": "1.0 only for a verifier-valid exact target solution; otherwise 0.0",
+    "generated_text_execution": false
+  },
+  "starting_checkpoints": {
+    "42": {
+      "adapter_path": "outputs/learning-sft-pilot-s42/final-adapter",
+      "adapter_model_sha256": "232bbc0935ae610bf20a8b673550acdf6c1822b7e81f6020fb9bc8075ab3e142"
+    },
+    "43": {
+      "adapter_path": "outputs/learning-sft-pilot-s43/final-adapter",
+      "adapter_model_sha256": "108a9817d04c43060c3bddaf51a5a2a433a39b7af70b588f5ff56ab86b9df15d"
+    },
+    "44": {
+      "adapter_path": "outputs/learning-sft-pilot-s44/final-adapter",
+      "adapter_model_sha256": "445b506eb99144b4427e0acd1b81b568ef9b4ceed91e7968cfc3dca83d7216ed"
+    }
+  },
+  "training_data": {
+    "path": "artifacts/data/source_train.jsonl",
+    "sha256": "43560b13702a8a93d965bd57030ad170a02b8e42b3ed7488b2b90d42245be8d5",
+    "use_oracle_witnesses": false
+  },
+  "signal_gate": {
+    "data_scope": "source_train only",
+    "task_selection": "first 32 records in frozen source_train.jsonl row order",
+    "adapter_seeds": [42, 43, 44],
+    "generations_per_task": 4,
+    "max_new_tokens": 128,
+    "temperature_rounds": [1.0, 1.3],
+    "top_p": 1.0,
+    "round_2_rule": "Only retry an adapter that fails round 1; one retry at temperature 1.3 on the same 32 train-only tasks.",
+    "pass_per_adapter": {
+      "sampled_positive_task_groups_min": 2,
+      "mixed_sampled_group_rate_min": 0.1,
+      "truncation_rate_max": 0.2
+    },
+    "test_data_used_for_gate_or_tuning": false
+  },
+  "warm_start_integration": {
+    "steps": 1,
+    "seed": 42,
+    "starting_adapter": "seed 42 frozen supervised adapter",
+    "output_is_separate_from_final_runs": true,
+    "verify_trainable_adapter_parameters_and_finite_gradients": true
+  },
+  "grpo": {
+    "eligible_seeds": "Each seed whose frozen SFT policy passes a predeclared train-only signal round.",
+    "max_steps": 50,
+    "checkpoint_rule": "Final step only; do not choose checkpoints using confirmation outcomes.",
+    "continue_existing_lora_adapter_weights": true,
+    "add_new_lora_adapter": false,
+    "learning_rate": 0.00001,
+    "per_device_train_batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "num_generations": 4,
+    "effective_generation_batch_size": 8,
+    "max_prompt_length": 128,
+    "max_completion_length": 128,
+    "temperature": "Use the temperature of the train-only signal round that passed: 1.0 or 1.3.",
+    "top_p": 1.0,
+    "top_k": 0,
+    "beta": 0.0,
+    "trl_loss_type": "dapo",
+    "dtype": "bf16",
+    "attention": "eager",
+    "prompt_format": "raw",
+    "vllm": false,
+    "reward": "binary exact verifier only",
+    "finite_gradient_logging": true
+  },
+  "confirmation": {
+    "freeze_before_training": true,
+    "source_tasks": 256,
+    "fresh_tasks": 256,
+    "exclude_all_prior_task_identities": true,
+    "fresh_tasks_oracle_solvable": true,
+    "oracle_witnesses_in_prompts": false,
+    "generation_modes": ["greedy", "sample"],
+    "sampled_completions_per_task": 4,
+    "max_new_tokens": 128,
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "generation_seed": 42,
+    "attention": "eager",
+    "comparison_models": [
+      "untouched base",
+      "matching frozen SFT initialization for each eligible seed",
+      "final 50-step GRPO adapter for each eligible seed"
+    ],
+    "bootstrap": {
+      "resamples": 10000,
+      "seed": 20260922,
+      "unit": "task"
+    },
+    "search_trace_audit": {
+      "max_pairs_per_seed": 20,
+      "selection": "Include gains and losses; select by fixed task-id order, stratified to at most 10 source and 10 fresh pairs.",
+      "format_normalization": "Remove only a final = integer suffix, then apply the unchanged verifier."
+    },
+    "checkpoint_selection_uses_confirmation": false,
+    "confirmation_used_for_hyperparameter_tuning": false
+  },
+  "gpu_budget": {
+    "amendment_total_hours": 12.0,
+    "previous_recorded_evaluation_wall_seconds": 10111.732321299001,
+    "previous_recorded_training_process_lifetime_seconds": 5809.0,
+    "previous_known_total_hours": 4.422425678138611,
+    "unmetered_prior_probe": "The 2026-09-18 candidate-A 128-token probe has no process runtime; its first-to-last completion timestamps span about 144 seconds.",
+    "reserved_hours_for_unmetered_prior_runtime_and_measurement_overhead": 0.5,
+    "new_followup_hard_cap_hours": 6.0,
+    "expected_remaining_headroom_hours_at_hard_cap": 1.077574321861389,
+    "accounting_rule": "Count recorded command/process wall time for every new probe, training run, and evaluation. Stop before the six-hour follow-up cap; do not infer GPU utilization from elapsed idle time."
+  }
+}

@@ -67,6 +67,20 @@ def select_lora_target_suffixes(module_names: Sequence[str]) -> list[str]:
     return selected
 
 
+def validate_adapter_target_suffixes(
+    target_modules: Sequence[str], module_names: Sequence[str]
+) -> list[str]:
+    """Require a saved adapter's targets to exist in the live base model."""
+
+    targets = sorted({str(target) for target in target_modules})
+    if not targets:
+        raise ValueError("the starting adapter must declare at least one target module")
+    missing = [target for target in targets if not any(name.endswith(target) for name in module_names)]
+    if missing:
+        raise ValueError(f"starting adapter targets are absent from the live model: {missing}")
+    return targets
+
+
 @dataclass
 class RewardTelemetry:
     """Binary reward callable plus exact group-level diagnostics for GRPO logs."""
@@ -89,6 +103,7 @@ class RewardTelemetry:
         details: list[dict[str, Any]] = []
         truncated_values = kwargs.get("truncated")
         completion_ids = kwargs.get("completion_ids")
+        task_ids = kwargs.get("task_id")
         for index, (completion, task_target, task_nums) in enumerate(
             zip(completions, target, nums, strict=True)
         ):
@@ -106,6 +121,13 @@ class RewardTelemetry:
             rewards.append(reward)
             details.append(
                 {
+                    "task_id": (
+                        str(task_ids[index])
+                        if isinstance(task_ids, Sequence)
+                        and not isinstance(task_ids, (str, bytes))
+                        and index < len(task_ids)
+                        else None
+                    ),
                     "target": int(task_target),
                     "nums": [int(number) for number in task_nums],
                     "raw_completion": text,

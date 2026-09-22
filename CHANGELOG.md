@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Froze a separately labeled SFT-initialized binary-GRPO follow-up, including
+  adapter hashes, train-only signal gates, a new source/fresh confirmation
+  design, pinned TRL batch semantics, and a six-hour hard follow-up budget.
+  No result is claimed before the corresponding GPU artifacts are recorded.
+- Added warm-start support to the GRPO runner so a saved PEFT LoRA adapter is
+  loaded trainably rather than replaced by a new random adapter. The runner
+  now records adapter/data hashes, exact training settings and package/device
+  versions, task IDs in reward telemetry, and finite-gradient diagnostics.
+
 - Completed the frozen source/fresh confirmation for supervised seeds 42, 43,
   and 44 on the RX 7900 XTX. All three saved 2,560 records with zero
   truncation; paired task bootstrap, normalization checks, trace audits, and an
