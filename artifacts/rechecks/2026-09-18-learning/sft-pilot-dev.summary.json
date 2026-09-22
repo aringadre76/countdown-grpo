@@ -1,0 +1,107 @@
+{
+  "adapter_path": "outputs/learning-sft-pilot-s42/final-adapter",
+  "by_number_count": {
+    "3": {
+      "exact_solve_rate": 0.26666666666666666,
+      "exact_solve_wilson_95": [
+        0.14182663319596317,
+        0.4444796169518888
+      ],
+      "records": 30
+    },
+    "4": {
+      "exact_solve_rate": 0.02,
+      "exact_solve_wilson_95": [
+        0.003539259271646236,
+        0.10495443589637815
+      ],
+      "records": 50
+    }
+  },
+  "by_split": {
+    "dev": {
+      "exact_solve_rate": 0.1125,
+      "exact_solve_wilson_95": [
+        0.060326869466304764,
+        0.20018218092372875
+      ],
+      "records": 80
+    }
+  },
+  "command": [
+    ".venv-rocm/bin/python",
+    "-m",
+    "countdown_grpo.evaluate",
+    "--model",
+    "Qwen/Qwen3.5-0.8B-Base",
+    "--revision",
+    "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "--adapter-path",
+    "outputs/learning-sft-pilot-s42/final-adapter",
+    "--data-dir",
+    "artifacts/data",
+    "--splits",
+    "source_dev",
+    "--limit",
+    "16",
+    "--generation-modes",
+    "greedy",
+    "sample",
+    "--samples-per-task",
+    "4",
+    "--max-new-tokens",
+    "128",
+    "--temperature",
+    "1.0",
+    "--top-p",
+    "0.95",
+    "--device",
+    "cuda",
+    "--attn-implementation",
+    "eager",
+    "--experiment-id",
+    "sft-pilot-dev-l128-s42",
+    "--output",
+    "artifacts/rechecks/2026-09-18-learning/sft-pilot-dev.jsonl"
+  ],
+  "completion_length": {
+    "max": 24,
+    "mean": 20.3375,
+    "min": 17
+  },
+  "completion_tokens": 1627,
+  "exact_solve_rate": 0.1125,
+  "exact_solve_wilson_95": [
+    0.060326869466304764,
+    0.20018218092372875
+  ],
+  "experiment_id": "sft-pilot-dev-l128-s42",
+  "failure_categories": {
+    "non_integer_intermediate": 23,
+    "ok": 9,
+    "wrong_target": 48
+  },
+  "finished_at": "2026-09-18T18:08:33.270529+00:00",
+  "git_commit": "25b7dddfaa966495e3a05be9bf97d4b118198c01",
+  "invalid_expression_rate": 0.2875,
+  "legal_expression_rate": 0.7125,
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "no_answer_rate": 0.0,
+  "output_jsonl": "artifacts/rechecks/2026-09-18-learning/sft-pilot-dev.jsonl",
+  "pass_at_k_by_generation_mode": {
+    "greedy": 0.1875,
+    "sample": 0.25
+  },
+  "peak_allocated_bytes": 1892637696,
+  "peak_reserved_bytes": 1981808640,
+  "prompt_format": "raw",
+  "record_count": 80,
+  "requested_attention_implementation": "eager",
+  "revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "started_at": "2026-09-18T18:07:15.663193+00:00",
+  "target_hit_but_illegal_definition": "Selected expression reaches the target under the exact parser while failing the locked Countdown number-use or integer-intermediate rules; diagnostic only, never reward.",
+  "target_hit_but_illegal_rate": 0.0,
+  "thinking_disabled": false,
+  "truncation_rate": 0.0,
+  "wall_time_seconds": 83.39927312500004
+}

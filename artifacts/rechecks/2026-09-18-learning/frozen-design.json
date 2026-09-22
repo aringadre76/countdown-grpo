@@ -1,0 +1,31 @@
+{
+  "status": "frozen",
+  "frozen_at": "2026-09-18T18:08:33.270529+00:00",
+  "branch": "supervised LoRA initialization; independent of historical no-SFT GRPO",
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "training_data_manifest": "artifacts/rechecks/2026-09-18-learning/supervised-data-manifest.json",
+  "training_steps": 512,
+  "training_seed_policy": "three independent seeds 42, 43, 44 from untouched base initialization",
+  "training_seeds": [42, 43, 44],
+  "checkpoint_selection": "final-step adapter only; no confirmation-based selection",
+  "checkpoints": {
+    "42": "outputs/learning-sft-pilot-s42/final-adapter",
+    "43": "outputs/learning-sft-pilot-s43/final-adapter",
+    "44": "outputs/learning-sft-pilot-s44/final-adapter"
+  },
+  "evaluation": {
+    "prompt_format": "raw frozen prompt",
+    "max_new_tokens": 128,
+    "greedy": true,
+    "sampled_completions_per_task": 4,
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "attention": "eager",
+    "device": "cuda"
+  },
+  "confirmation_tasks_per_suite": 256,
+  "confirmation_suites": ["source_confirmation", "fresh_confirmation"],
+  "bootstrap": {"resamples": 10000, "seed": 20260918},
+  "search_audit": {"equality_suffix_normalization": "diagnostic only", "max_pairs_per_seed": 20}
+}

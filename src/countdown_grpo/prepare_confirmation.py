@@ -61,7 +61,11 @@ def main():
     freeze = json.loads(args.freeze.read_text())
     if freeze.get("status") != "frozen" or args.size != freeze["confirmation_tasks_per_suite"]:
         raise ValueError("a matching frozen confirmation design is required")
-    if args.output_dir.exists() or args.manifest.exists():
+    # Permit callers to create the destination directory up front, but never
+    # overwrite an existing artifact or manifest.
+    if args.output_dir.exists() and any(args.output_dir.iterdir()):
+        raise ValueError("confirmation output must be new")
+    if args.manifest.exists():
         raise ValueError("confirmation output must be new")
     forbidden = set()
     all_source = set()
@@ -86,7 +90,7 @@ def main():
                              forbidden_keys=forbidden | all_source)
     for task in fresh:
         task["split"] = "fresh_confirmation"
-    args.output_dir.mkdir(parents=True)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
     for name, tasks in [("source_confirmation", source), ("fresh_confirmation", fresh)]:
         write_jsonl(args.output_dir / f"{name}.jsonl", tasks)
     manifest = {

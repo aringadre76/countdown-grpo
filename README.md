@@ -22,12 +22,19 @@ weight, but its reused base tokenizer files differ from official instruct files.
 Treat historical instruct results as local packaging diagnostics. They do not
 establish the correctly packaged instruct checkpoint's solving ability.
 
-The named supervised extension has passed its 64-step dev gate: 7/80 exact
-completions versus 0/80 for untouched base, with legality rising from 3.75% to
-63.75%. Greedy accuracy was 2/16 tasks and sampled pass@4 was 4/16. A fresh
-512-step run is in progress. These are dev-selection results, not held-out
-confirmation or a GRPO learning claim. See the generated
+The named supervised extension passed its 64-step dev gate and three frozen
+512-step seeds completed. On the fixed 16-task dev sample, seed 42 scored 9/80
+exact (greedy pass@1 18.75%, sampled pass@4 25%), seed 43 scored 8/80 (12.5%,
+31.25%), and seed 44 scored 8/80 (12.5%, 25%). These are supervised
+initialization results, not a GRPO learning claim. See the generated
 [diagnostic report](artifacts/rechecks/2026-09-18-learning/sft-diagnostic-report.md).
+
+The frozen confirmation task manifest contains 256 held-out source tasks and
+256 fresh tasks, with prior canonical identities excluded. The untouched-base
+confirmation completed 2,560 records: 5 exact (0.195%), greedy pass@1 0.195%,
+sampled pass@4 0.781%, and 3.71% legal expressions. The seed-42 adapter
+confirmation was started with identical settings but paused by the user before
+completion; no adapter confirmation claim is made from that partial run.
 
 The intended AMD GPU path now works in WSL2: Torch sees an RX 7900 XTX and a
 real Qwen3.5 GRPO run completed. The measured result is still negative for

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Completed three 512-step supervised LoRA seeds and their fixed dev checks;
+  prepared a leakage-safe 256-source/256-fresh confirmation suite and recorded
+  the untouched-base confirmation (5/2,560 exact). Paused the seed-42 adapter
+  confirmation at the user's request before it completed.
+
 - Aligned evaluation termination with TRL's EOS-or-PAD rule and added CPU-only
   token-limit tests for EOS, PAD, and genuinely clipped completions. Base-model
   dev comparisons are unchanged because its EOS and PAD IDs are identical.

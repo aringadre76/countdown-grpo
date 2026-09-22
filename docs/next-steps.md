@@ -8,10 +8,11 @@ records the historical base branch's stopping decision, not a ban on this extens
 The two new control probes failed their signal gate, but a metadata audit also
 found mismatched tokenizer files. Treat them as packaging diagnostics, not
 official instruct-model competence measurements. The train-only supervised base
-branch passed its 64-step loss/legality gate and began a fresh 512-step run.
-Evaluate that final adapter on the same dev tasks; exact dev gain is required
-before three fresh independent 512-step seed runs. No confirmation performance
-has been measured for this branch.
+branch passed its 64-step loss/legality gate and three independent 512-step
+seeds completed. Their fixed dev results are saved under
+`artifacts/rechecks/2026-09-18-learning/`. The untouched-base frozen
+confirmation also completed; the adapter confirmation was paused during seed
+42 by user request and must be resumed before any adapter confirmation claim.
 
 The AMD/ROCm path is now functional, so the next question is no longer “can
 the machine train?” It is whether the base policy can produce enough legal
@@ -36,6 +37,9 @@ exact solutions for binary GRPO to learn from.
   two all-zero reward groups. Weight hash and metadata provenance are in
   `artifacts/rechecks/2026-09-08-gpu-followup/instruct-control-manifest.json`;
   the earlier download blocker remains immutable historical evidence.
+- The frozen 512-task confirmation manifest is leakage-safe and records 256
+  held-out source tasks plus 256 fresh tasks. Untouched base scored 5/2,560
+  exact (0.195%), with greedy pass@1 0.195% and sampled pass@4 0.781%.
 
 ## Recommended sequence
 
@@ -44,9 +48,9 @@ exact solutions for binary GRPO to learn from.
    dev signal. The saved probes are the stopping evidence for this branch.
 3. Keep the recorded local instruct control as a packaging diagnostic with
    mismatched tokenizer metadata; do not infer official-model competence.
-4. Evaluate any preselected checkpoint once on the frozen source and fresh
-   suites with unchanged generation settings. Report pass@1 and pass@k
-   separately.
+4. Resume the preselected seed-42 adapter confirmation, then evaluate seeds 43
+   and 44 once each on the frozen source and fresh suites with unchanged
+   generation settings. Report pass@1 and pass@k separately.
 5. If future work changes the prompt or completion budget, predeclare it on
    source-dev only and preserve the current frozen evidence for comparison.
 
