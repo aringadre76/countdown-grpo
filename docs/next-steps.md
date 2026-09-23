@@ -65,21 +65,35 @@ it does not show that GRPO cannot help more generally. Keep this branch
 separate from both the successful SFT result and the historical no-SFT GRPO
 result.
 
-## Recommended next experiment
+## Verifier-filtered test-time search (in progress)
 
-The most useful next test is whether 50 GRPO steps were simply too few. If the
-project continues, predeclare a separately named three-seed follow-up with a
-longer fixed budget (for example, 150–300 total steps from each frozen SFT
-adapter), a train/dev-only checkpoint or stopping rule, and new untouched
-source/fresh confirmation tasks. Keep the binary exact reward and arithmetic
-contract for a direct comparison; any curriculum, reward, model, or task change
-must be a separate explicitly justified method. Estimate the full three-seed
-training and evaluation cost first and authorize a new budget—the completed
-six-hour amendment must not be extended after seeing its confirmation results.
+The next frozen experiment is the separate inference-time study in
+[`amendment-2026-09-23-verifier-search.md`](amendment-2026-09-23-verifier-search.md)
+and `artifacts/rechecks/2026-09-23-verifier-search/`. It compares the pinned
+base and all three existing final SFT adapters on new, leakage-excluded
+source/fresh suites. For each task it samples eight independent candidates in
+addition to greedy output and returns the first completion accepted by the
+unchanged exact verifier. It uses no training data as answer hints, no new
+optimizer update, and no extra reward signal.
 
-Require the final comparison to report paired pass@1 and pass@4 against the
-matching SFT checkpoints and untouched base, seed directions, task-bootstrap
-intervals, reward-group diagnostics, the same equality-suffix normalization,
-and audited gains and losses. Use new task identities and freeze the analysis
-before the first optimizer step. Do not infer success from reward curves,
-legal-expression rate, or one seed.
+This is the most direct next test because the completed SFT evaluation already
+showed sampled pass@4 above greedy pass@1 on both suites, while 50 GRPO steps
+did not demonstrate a further held-out gain. Dynamic-sampling GRPO is less
+motivated while the previous policies had 21%–36% mixed reward groups; a
+Dr. GRPO length-bias change is less motivated by the measured ~36-token
+completions and zero truncation. The inference-time experiment tests whether
+the verified correct candidates in the sampling distribution can be converted
+into a practical exact-solve gain at a declared compute cost. The literature
+on self-consistency provides precedent for multiple sampled reasoning paths,
+but this study selects with the task's exact verifier, not majority vote.
+
+The experiment remains in progress until all four frozen GPU evaluations and
+the paired report finish or the six-hour process-time cap is exhausted. Only
+the saved report can establish whether it helped. Keep the result separate
+from the learned-model and GRPO results: inference-time candidate filtering is
+not evidence that the weights learned from RL.
+
+After this report, consider a longer three-seed GRPO continuation only as a
+new experiment. Predeclare a train/dev-only checkpoint rule, new confirmation
+tasks, method, and full GPU budget first. Do not extend the already completed
+50-step design or use any final confirmation tasks to tune settings.

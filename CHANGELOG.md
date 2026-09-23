@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Froze a separately named verifier-filtered test-time sampling experiment
+  after the 50-step SFT-initialized GRPO study showed no demonstrated
+  incremental gain. Prepared disjoint 256-task source/fresh suites and
+  recorded the observed ROCm/GPU preflight; no new model-evaluation result is
+  claimed yet. Added an evidence-only report generator and CPU tests.
 - Completed the frozen three-seed SFT-initialized binary-GRPO follow-up on the
   RX 7900 XTX, including seven confirmation evaluations and 5.064 recorded GPU
   process-hours of the six-hour cap. The paired report found no demonstrated

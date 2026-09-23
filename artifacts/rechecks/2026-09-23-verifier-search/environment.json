@@ -1,0 +1,39 @@
+{
+  "experiment_id": "qwen35-08b-verifier-filtered-search-2026-09-23",
+  "observed_at_utc": "2026-09-23T03:05:12Z",
+  "environment": {
+    "os": "Ubuntu 22.04.5 LTS under WSL2",
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "cpu": "12th Gen Intel(R) Core(TM) i7-12700K; 6 vCPUs exposed to WSL",
+    "project_python": "3.11.15",
+    "python_environment": ".venv-rocm"
+  },
+  "device": {
+    "name": "AMD Radeon RX 7900 XTX",
+    "architecture": "gfx1100",
+    "torch_device_string": "cuda:0",
+    "torch_cuda_available": true,
+    "total_memory_mb": 24517,
+    "free_memory_bytes_at_preflight": 21569617920,
+    "total_memory_bytes_reported_by_torch": 25708240896
+  },
+  "packages": {
+    "torch": "2.13.0+rocm7.14.0",
+    "hip": "7.14.60850",
+    "transformers": "5.16.1",
+    "trl": "1.12.0",
+    "peft": "0.20.0",
+    "accelerate": "1.14.0",
+    "huggingface_hub": "1.30.0"
+  },
+  "preflight": {
+    "rocminfo_command": "rocminfo",
+    "rocminfo_observation": "Reported AMD Radeon RX 7900 XTX and gfx1100; also printed a non-fatal rocSHMEM libnuma warning.",
+    "rocm_smi_command": "rocm-smi --showproductname --showuse --showmeminfo vram",
+    "rocm_smi_observation": "ERROR:root:Driver not initialized (amdgpu not found in modules)",
+    "process_probe_command": "ps -eo pid,etime,comm,args | rg -i 'llama|countdown|vllm|python'",
+    "process_probe_observation": "No llama.cpp, Countdown, vLLM, or training process was present. The only Python matches were the WSL networkd-dispatcher and unattended-upgrades system services.",
+    "gpu_occupancy_observation": "Torch reported 21,569,617,920 bytes free of 25,708,240,896 bytes before evaluation; no model workload was observed.",
+    "training_started": false
+  }
+}

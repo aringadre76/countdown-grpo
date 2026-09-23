@@ -1,11 +1,14 @@
 # Countdown GRPO experiment protocol
 
 Status: Current
-Last updated: 2026-09-18
+Last updated: 2026-09-23
 
 The active extension is governed by [the dated learning-study amendment](amendment-2026-09-18.md)
 and the [2026-09-22 SFT-initialized GRPO addendum](amendment-2026-09-22-sft-init-grpo.md)
 for that separately labeled follow-up.
+The distinct 2026-09-23 verifier-filtered inference experiment is governed by
+[`amendment-2026-09-23-verifier-search.md`](amendment-2026-09-23-verifier-search.md);
+it does not add training or revise either historical GRPO result.
 It authorizes named alternative strategies while preserving this original protocol
 and its results as historical evidence. Where extension rules conflict, use the
 amendment for new experiments and this document for original-experiment claims.

@@ -47,10 +47,6 @@ Primary references:
 - Liu et al., [Understanding R1-Zero-Like Training: A Critical
   Perspective](https://arxiv.org/abs/2503.20783), which analyzes GRPO's
   response-length bias and proposes Dr. GRPO.
-- [TRL 1.12.0 GRPO configuration and sampling semantics](https://huggingface.co/docs/trl/v0.22.1/grpo_trainer)
-  are not used for this no-training experiment; the installed evaluator's
-  pinned behavior and generation command are recorded in its summaries.
-
 ## Frozen method
 
 - Task and exact verifier stay unchanged: integer-only binary `+`, `-`, `*`,

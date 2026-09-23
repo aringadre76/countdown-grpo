@@ -34,6 +34,9 @@ each document to one purpose.
 - `CHANGELOG.md` records intentional project changes.
 - `artifacts/rechecks/2026-09-22-sft-init-grpo/README.md` maps the completed
   three-seed SFT-initialized binary-GRPO evidence and rerun commands.
+- `docs/amendment-2026-09-23-verifier-search.md` and
+  `artifacts/rechecks/2026-09-23-verifier-search/` govern the separately named
+  verifier-filtered inference-time study; do not call it a training result.
 
 Artifacts, not Markdown prose, are the source of truth for counts, commands,
 versions, hardware probes, completions, and metrics. Keep original evidence
@@ -64,6 +67,15 @@ three-seed greedy gain is +0.39 points on source tasks (95% interval −0.65 to
 with the earlier SFT gains or the historical no-SFT result. Any longer GRPO
 run requires a new dated design and budget.
 
+A further inference-time study was frozen and its new 256-source/256-fresh
+task suites prepared under
+[`artifacts/rechecks/2026-09-23-verifier-search/`](artifacts/rechecks/2026-09-23-verifier-search/).
+It compares the untouched base and all three fixed SFT adapters using an
+ordered greedy-plus-eight-sample exact-verifier search. No model evaluation
+result has been recorded yet; do not infer one from pass@4 in the earlier
+report. Its dated amendment contains the method, success rule, and six-hour
+GPU process-time cap.
+
 ## Research question
 
 The active learning study follows [the 2026-09-18 amendment](docs/amendment-2026-09-18.md)
@@ -86,6 +98,10 @@ did not demonstrate additional benefit over SFT on both source and fresh tasks.
 Its report is in
 [`artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/`](artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/).
 Any longer run requires a new dated design and budget.
+
+The current follow-up tests exact-verifier-filtered inference-time search, not
+additional GRPO training. Preserve its frozen model, task IDs, candidate order,
+metrics, and compute cap; save all new outputs beside its frozen design.
 
 ## Integrity
 

@@ -86,3 +86,17 @@ observed before the runs. As in the earlier snapshot, `rocm-smi` can still
 print `Driver not initialized (amdgpu not found in modules)` in WSL; the
 Torch `cuda` device records and successful model executions are the evidence
 of this path, not the `rocm-smi` output alone.
+
+## 2026-09-23 verifier-search preflight
+
+The new inference-only confirmation used the same WSL2 ROCm runtime: Python
+3.11.15, Torch `2.13.0+rocm7.14.0`, HIP `7.14.60850`, Transformers `5.16.1`,
+TRL `1.12.0`, PEFT `0.20.0`, and Accelerate `1.14.0`. Before evaluation,
+`torch.cuda.is_available()` was true and Torch identified AMD Radeon RX 7900
+XTX (`gfx1100`), with 21,569,617,920 bytes free of 25,708,240,896 reported
+bytes. No llama.cpp, vLLM, Countdown, or other model process was observed.
+
+`rocminfo` reported the GPU but printed a non-fatal rocSHMEM/libnuma warning;
+`rocm-smi --showproductname --showuse --showmeminfo vram` returned
+`Driver not initialized (amdgpu not found in modules)`. The observed manifest
+is [`environment.json`](../artifacts/rechecks/2026-09-23-verifier-search/environment.json).

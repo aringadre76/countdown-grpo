@@ -183,12 +183,14 @@ examples of changed legal arithmetic; most sampled disagreements remain
 ambiguous. This is evidence about learning this Countdown task, not general
 reasoning or an RL improvement.
 
-The frozen SFT-initialized GRPO comparison is now complete and did not meet its
-positive-result criterion. The best next step is a separately predeclared
-longer-training study with a dev-only checkpoint rule and new untouched source
-and fresh confirmation tasks; do not extend the completed 50-step design or
-tune on its confirmation suites. The historical base/no-SFT GRPO result remains
-separate. See [`docs/next-steps.md`](docs/next-steps.md) and
+The frozen SFT-initialized GRPO comparison is complete and did not meet its
+positive-result criterion. The current follow-up is a separate, predeclared
+inference-time test: select the first exact-verifier-approved answer from one
+greedy output plus eight sampled candidates on new source and fresh tasks. It
+does not train the model and is not a GRPO result. Its evaluation is in progress;
+no outcome is claimed yet. The historical base/no-SFT GRPO result remains
+separate. See [`docs/next-steps.md`](docs/next-steps.md),
+[`docs/amendment-2026-09-23-verifier-search.md`](docs/amendment-2026-09-23-verifier-search.md), and
 [`docs/lessons.md`](docs/lessons.md).
 
 ## Sources
