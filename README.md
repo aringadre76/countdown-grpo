@@ -74,6 +74,46 @@ The earlier local instruct control used mismatched tokenizer metadata and is a
 packaging diagnostic only. It does not affect the base-model conclusion or the
 supervised branch.
 
+## SFT-initialized binary GRPO: no demonstrated additional gain
+
+The separately frozen follow-up continued each of the three final SFT LoRA
+adapters for 50 TRL GRPO steps with the unchanged exact binary reward. All
+three train-only signal gates passed. Each run logged 400 completions; mixed
+reward-group rates were 30%, 21%, and 36% for seeds 42, 43, and 44. The runs
+used the same task contract and did not put oracle witnesses in prompts.
+
+The untouched base, each SFT adapter, and each matching GRPO adapter were
+evaluated on the same 256 source and 256 fresh solvable tasks, with one greedy
+and four sampled completions per task. Each evaluation saved 2,560 records;
+there was no truncation. The primary comparison is GRPO versus its matching
+SFT initialization, not versus the base:
+
+| Seed | Source SFT → GRPO pass@1 | Fresh SFT → GRPO pass@1 |
+|---:|---:|---:|
+| 42 | 21.88% → 23.44% (+1.56 pp) | 7.81% → 7.81% (no change) |
+| 43 | 20.70% → 21.09% (+0.39 pp) | 7.03% → 6.64% (−0.39 pp) |
+| 44 | 21.88% → 21.09% (−0.78 pp) | 8.59% → 8.20% (−0.39 pp) |
+| Three-seed mean | 21.48% → 21.88% (+0.39 pp) | 7.81% → 7.55% (−0.26 pp) |
+
+![Three-seed base, SFT, and GRPO pass@1/pass@4 on frozen source and fresh tasks](artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/comparison.svg)
+
+The three-seed paired task-bootstrap interval was −0.65 to +1.56 points on
+source greedy accuracy and −0.78 to +0.26 points on fresh greedy accuracy.
+Sampled pass@4 changed by +1.30 points on source (95% interval −0.39 to +2.99)
+and +0.26 points on fresh (−1.04 to +1.69). These intervals do not establish
+an improvement on both suites, and the seed directions are not consistent.
+The correct conclusion is that this 50-step GRPO follow-up did not demonstrate
+an additional improvement over SFT. This does not establish that GRPO cannot
+help under a different, separately predeclared design.
+
+The fixed search audit found four cases per seed where a different legal
+arithmetic expression reached the target, alongside four lost greedy solutions
+for seed 43 and seven for seed 44. Those examples do not override the paired
+aggregate result. The full comparisons, 10,000-resample intervals, normalized
+metrics, audit traces, saved plot, commands, and compute accounting are in the
+[follow-up evidence report](artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/)
+and [artifact guide](artifacts/rechecks/2026-09-22-sft-init-grpo/README.md).
+
 ## Arithmetic contract
 
 All branches are evaluated under the same exact Countdown rules: binary `+`,
@@ -143,11 +183,12 @@ examples of changed legal arithmetic; most sampled disagreements remain
 ambiguous. This is evidence about learning this Countdown task, not general
 reasoning or an RL improvement.
 
-The next useful experiment is binary GRPO initialized from the supervised
-checkpoint, with a train-only positive/mixed-group check first and a matched
-comparison against the SFT checkpoint. The historical base/no-SFT GRPO branch
-remains the negative control. Do not change the frozen suites or select a model
-from their results. See [`docs/next-steps.md`](docs/next-steps.md) and
+The frozen SFT-initialized GRPO comparison is now complete and did not meet its
+positive-result criterion. The best next step is a separately predeclared
+longer-training study with a dev-only checkpoint rule and new untouched source
+and fresh confirmation tasks; do not extend the completed 50-step design or
+tune on its confirmation suites. The historical base/no-SFT GRPO result remains
+separate. See [`docs/next-steps.md`](docs/next-steps.md) and
 [`docs/lessons.md`](docs/lessons.md).
 
 ## Sources

@@ -1,6 +1,6 @@
 # Lessons and durable constraints
 
-Status: current as of 2026-09-22.
+Status: current as of 2026-09-23.
 
 ## GPU recovery
 
@@ -69,6 +69,29 @@ Status: current as of 2026-09-22.
   `rocminfo` and Torch still identify the RX 7900 XTX. A saved on-device
   tensor probe plus a completed model evaluation are stronger evidence than
   the `rocm-smi` message alone.
+
+## SFT-initialized binary-GRPO confirmation
+
+- All three SFT policies passed the predeclared train-only positive/mixed
+  reward gate, and the 50-step runs retained mixed groups (21%–36%). This
+  established a usable training signal, not a held-out improvement.
+- The six SFT/GRPO adapter confirmations each used the same 256 source and 256
+  fresh tasks, with one greedy and four sampled outputs per task, and zero
+  truncation. Paired task analysis found no demonstrated GRPO gain over SFT:
+  source greedy mean +0.39 percentage points (95% interval −0.65 to +1.56),
+  fresh greedy mean −0.26 points (−0.78 to +0.26). Sampled pass@4 changes were
+  small and also had intervals spanning zero.
+- The per-seed directions matter: seed 42 improved source greedy but was flat
+  on fresh; seed 43 had a small source gain and a fresh loss; seed 44 lost on
+  both. A positive seed or a higher training reward must not be promoted as
+  repeatable learning.
+- The audit identified four changed legal target-reaching expressions per
+  seed, alongside 11 lost greedy solutions in seeds 43 and 44. These selected
+  examples do not replace task-level aggregate evidence.
+- A 50-step warm start is a bounded negative/inconclusive result for this
+  design, not evidence that GRPO generally cannot improve an SFT policy. Any
+  longer run needs a new step budget, checkpoint rule, dev gate, and new frozen
+  confirmation suites; do not spend the completed amendment's remaining cap.
 
 ## Engineering
 

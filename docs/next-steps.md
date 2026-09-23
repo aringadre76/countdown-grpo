@@ -41,25 +41,45 @@ extension does not retroactively turn that into a GRPO result.
 The local instruct checkpoint remains a packaging diagnostic because its
 tokenizer metadata did not match the official instruct revision.
 
+## SFT-initialized GRPO follow-up (completed)
+
+The frozen method in
+[`amendment-2026-09-22-sft-init-grpo.md`](amendment-2026-09-22-sft-init-grpo.md)
+completed all three train-only signal gates, 50-step GRPO runs, and frozen
+base/SFT/GRPO evaluations. Its paired report is
+[`report-final`](../artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/).
+
+| Criterion for additional GRPO benefit | Result |
+|---|---|
+| Paired greedy gain over matching SFT on source tasks | +0.39 percentage points; 95% task-bootstrap interval −0.65 to +1.56 (not established) |
+| Paired greedy gain over matching SFT on fresh tasks | −0.26 points; interval −0.78 to +0.26 (not established) |
+| Positive direction for all three seeds on both suites | Not met: seed 42 was flat on fresh; seeds 43 and 44 declined on fresh; seed 44 also declined on source |
+| Sampled pass@4 improvement | Small aggregate gains (+1.30 source, +0.26 fresh), with both intervals spanning zero |
+| GPU cap | 5.064 of 6.0 follow-up process-hours recorded; no further run is authorized under this frozen design |
+
+Conclusion: this 50-step binary-GRPO follow-up did not demonstrate improvement
+over its supervised initialization. Mixed reward groups and positive training
+reward were present, but did not translate into a repeatable held-out gain.
+This result is limited to the frozen model, reward, tasks, and 50-step budget;
+it does not show that GRPO cannot help more generally. Keep this branch
+separate from both the successful SFT result and the historical no-SFT GRPO
+result.
+
 ## Recommended next experiment
 
-The SFT-initialized GRPO follow-up now has a frozen method, train-only signal
-gate, new confirmation design, and hard budget in
-[`amendment-2026-09-22-sft-init-grpo.md`](amendment-2026-09-22-sft-init-grpo.md).
-No new probe or GRPO result is recorded yet. Follow that frozen design; do not
-use the already reported supervised confirmation outcomes to select a GRPO
-checkpoint.
+The most useful next test is whether 50 GRPO steps were simply too few. If the
+project continues, predeclare a separately named three-seed follow-up with a
+longer fixed budget (for example, 150–300 total steps from each frozen SFT
+adapter), a train/dev-only checkpoint or stopping rule, and new untouched
+source/fresh confirmation tasks. Keep the binary exact reward and arithmetic
+contract for a direct comparison; any curriculum, reward, model, or task change
+must be a separate explicitly justified method. Estimate the full three-seed
+training and evaluation cost first and authorize a new budget—the completed
+six-hour amendment must not be extended after seeing its confirmation results.
 
-Test binary GRPO initialized from the supervised checkpoint. First score
-train-only rollouts from the SFT policy using the frozen binary verifier and
-measure positive completions, mixed reward groups, and truncation. Do not use
-source confirmation or fresh confirmation tasks for this gate. If the amendment's
-signal threshold passes, freeze a short GRPO diagnostic against the same SFT
-adapter, then evaluate the post-GRPO checkpoint against both the pre-GRPO SFT
-checkpoint and untouched base under a newly predeclared confirmation design.
-Retain the same task contract and report whether any improvement survives the
-same formatting normalization.
-
-The final-step SFT checkpoints are the fixed starting point for this next
-comparison. Do not retune them from confirmation outcomes. Complete and publish
-the budget and design amendment before launching this follow-up.
+Require the final comparison to report paired pass@1 and pass@4 against the
+matching SFT checkpoints and untouched base, seed directions, task-bootstrap
+intervals, reward-group diagnostics, the same equality-suffix normalization,
+and audited gains and losses. Use new task identities and freeze the analysis
+before the first optimizer step. Do not infer success from reward curves,
+legal-expression rate, or one seed.

@@ -1,7 +1,7 @@
 # Agent instructions
 
 Status: Current
-Last updated: 2026-09-22
+Last updated: 2026-09-23
 
 This file is the operational contract for Codex, Cursor, and other coding
 agents working in this repository. After context compaction, a long GPU step,
@@ -32,6 +32,8 @@ each document to one purpose.
 - `docs/lessons.md` contains durable implementation and experiment lessons.
 - `docs/next-steps.md` contains the gated follow-up plan.
 - `CHANGELOG.md` records intentional project changes.
+- `artifacts/rechecks/2026-09-22-sft-init-grpo/README.md` maps the completed
+  three-seed SFT-initialized binary-GRPO evidence and rerun commands.
 
 Artifacts, not Markdown prose, are the source of truth for counts, commands,
 versions, hardware probes, completions, and metrics. Keep original evidence
@@ -48,12 +50,19 @@ This is evidence for the named supervised branch; it does not change the
 historical no-SFT/base/binary-GRPO result. Read the report before drawing a
 project-level conclusion.
 
-A separate SFT-initialized binary-GRPO follow-up is predeclared in
+A separate SFT-initialized binary-GRPO follow-up was predeclared in
 [`docs/amendment-2026-09-22-sft-init-grpo.md`](docs/amendment-2026-09-22-sft-init-grpo.md).
 Its frozen design is in
 [`artifacts/rechecks/2026-09-22-sft-init-grpo/frozen-design.json`](artifacts/rechecks/2026-09-22-sft-init-grpo/frozen-design.json).
-As of the freeze, no signal probe or GRPO run has been recorded for that
-follow-up; do not infer its outcome from the earlier SFT evaluation.
+All three train-only signal gates, 50-step GRPO runs, and frozen base/SFT/GRPO
+confirmations completed within the six-hour follow-up cap. The generated
+paired report is in
+[`artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/`](artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/).
+It shows no demonstrated improvement over the matching SFT checkpoints: the
+three-seed greedy gain is +0.39 points on source tasks (95% interval −0.65 to
++1.56) and −0.26 points on fresh tasks (−0.78 to +0.26). Do not conflate this
+with the earlier SFT gains or the historical no-SFT result. Any longer GRPO
+run requires a new dated design and budget.
 
 ## Research question
 
@@ -70,6 +79,13 @@ Countdown solving via TRL GRPO and a binary exact reward?
 TinyZero reports that Qwen2.5-0.5B failed to learn Countdown reasoning and
 presents a stronger 3B configuration. Treat 0.8B as a lower-bound test. A
 measured negative result is a successful project.
+
+The separately named 50-step SFT-initialized GRPO follow-up completed within
+its six-hour cap. All three signal gates passed, but paired held-out results
+did not demonstrate additional benefit over SFT on both source and fresh tasks.
+Its report is in
+[`artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/`](artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/).
+Any longer run requires a new dated design and budget.
 
 ## Integrity
 

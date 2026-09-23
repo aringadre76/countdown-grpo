@@ -10,7 +10,8 @@
 | [`hardware.md`](hardware.md) | Intended hardware, observed WSL ROCm device, and compatibility caveats. |
 | [`../artifacts/rechecks/2026-09-22-confirmation/README.md`](../artifacts/rechecks/2026-09-22-confirmation/README.md) | Frozen three-seed confirmation, actual compute, hardware, results, and artifact map. |
 | [`../artifacts/rechecks/2026-09-22-confirmation/report-final/`](../artifacts/rechecks/2026-09-22-confirmation/report-final/) | Generated task-paired comparisons, trace audits, and plot. |
-| [`../artifacts/rechecks/2026-09-22-sft-init-grpo/`](../artifacts/rechecks/2026-09-22-sft-init-grpo/) | Frozen design and the evidence directory for the separate SFT-initialized GRPO follow-up. No run result is claimed until saved artifacts are complete. |
+| [`../artifacts/rechecks/2026-09-22-sft-init-grpo/README.md`](../artifacts/rechecks/2026-09-22-sft-init-grpo/README.md) | Frozen design, commands, hardware, full compute accounting, result, and evidence map for the completed SFT-initialized GRPO follow-up. |
+| [`../artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/`](../artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/) | Generated three-seed paired comparisons, bootstrap intervals, per-seed audit traces, and plot for SFT versus GRPO. |
 | [`lessons.md`](lessons.md) | Durable constraints and mistakes not to repeat. |
 | [`next-steps.md`](next-steps.md) | Gated GPU recovery and experiment plan. |
 | [`../CHANGELOG.md`](../CHANGELOG.md) | Intentional project changes by release. |

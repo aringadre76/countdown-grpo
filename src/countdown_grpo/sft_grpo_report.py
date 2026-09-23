@@ -6,12 +6,19 @@ import argparse
 import html
 import json
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from .comparison import audit_pairs, normalized_record, paired_bootstrap, task_outcomes
 from .data import file_sha256, read_jsonl, write_jsonl
 from .report import _diagnostic_summary
+
+
+def _attempt_seconds(attempt: dict[str, Any]) -> float:
+    started = datetime.fromisoformat(attempt["started_at"])
+    finished = datetime.fromisoformat(attempt["finished_at"])
+    return (finished - started).total_seconds()
 
 
 def _validate_paired(left: list[dict[str, Any]], right: list[dict[str, Any]]) -> None:
@@ -139,6 +146,11 @@ def generate_report(*, baseline_path: Path, sft_paths: list[Path], grpo_paths: l
     baseline = read_jsonl(baseline_path)
     sft = [read_jsonl(path) for path in sft_paths]
     grpo = [read_jsonl(path) for path in grpo_paths]
+    evaluation_paths = [baseline_path, *sft_paths, *grpo_paths]
+    evaluation_summaries = {
+        path.name: json.loads(path.with_suffix(".summary.json").read_text(encoding="utf-8"))
+        for path in evaluation_paths
+    }
     for index, seed in enumerate((42, 43, 44)):
         expected_start = freeze["starting_checkpoints"][str(seed)]["adapter_path"]
         expected_grpo = f"outputs/sft-init-grpo-s{seed}/final-adapter"
@@ -159,6 +171,7 @@ def generate_report(*, baseline_path: Path, sft_paths: list[Path], grpo_paths: l
         "aggregate": {},
         "training": {},
         "audit_counts": {},
+        "evaluation_summaries": evaluation_summaries,
     }
     bootstrap_seed = result["bootstrap"]["seed"]
     for seed, sft_rows, grpo_rows, sft_path, grpo_path in zip((42, 43, 44), sft, grpo, sft_paths, grpo_paths, strict=True):
@@ -194,6 +207,38 @@ def generate_report(*, baseline_path: Path, sft_paths: list[Path], grpo_paths: l
     }
     for name, (left, right) in contrasts.items():
         result["aggregate"][name] = _aggregate(left, right, seed=bootstrap_seed)
+
+    signal_summaries = sorted(evidence_dir.glob("signal-s*-t*.summary.json"))
+    integration_attempt = json.loads((evidence_dir / "integration-s42" / "attempt.json").read_text(encoding="utf-8"))
+    training_seconds = sum(
+        _attempt_seconds(result["training"][f"seed-{seed}"]["attempt"])
+        for seed in (42, 43, 44)
+    )
+    evaluation_seconds = sum(summary["wall_time_seconds"] for summary in evaluation_summaries.values())
+    signal_seconds = sum(json.loads(path.read_text(encoding="utf-8"))["wall_time_seconds"] for path in signal_summaries)
+    integration_seconds = _attempt_seconds(integration_attempt)
+    total_process_seconds = evaluation_seconds + signal_seconds + integration_seconds + training_seconds
+    cap_seconds = freeze["gpu_budget"]["new_followup_hard_cap_hours"] * 3600
+    result["compute"] = {
+        "evaluation_seconds": evaluation_seconds,
+        "evaluation_count": len(evaluation_summaries),
+        "signal_probe_seconds": signal_seconds,
+        "signal_probe_count": len(signal_summaries),
+        "integration_seconds": integration_seconds,
+        "training_process_seconds": training_seconds,
+        "total_recorded_process_seconds": total_process_seconds,
+        "total_recorded_process_hours": total_process_seconds / 3600,
+        "followup_cap_hours": cap_seconds / 3600,
+        "remaining_cap_hours": (cap_seconds - total_process_seconds) / 3600,
+        "base_confirmation_device": baseline[0]["device"],
+        "gpu_name": result["training"]["seed-42"]["run_config"]["device_name"],
+        "gpu_architecture": result["training"]["seed-42"]["run_config"]["device_architecture"],
+        "torch": result["training"]["seed-42"]["run_config"]["package_versions"]["torch"],
+        "hip": result["training"]["seed-42"]["run_config"]["torch_hip_version"],
+        "transformers": result["training"]["seed-42"]["run_config"]["package_versions"]["transformers"],
+        "trl": result["training"]["seed-42"]["run_config"]["package_versions"]["trl"],
+        "peft": result["training"]["seed-42"]["run_config"]["package_versions"]["peft"],
+    }
     (output_dir / "comparison.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     rows = ["| Contrast | Suite | Metric | Initialization | Trained mean | Paired gain | 95% task-bootstrap interval |", "|---|---|---|---:|---:|---:|---|"]
@@ -217,11 +262,73 @@ def generate_report(*, baseline_path: Path, sft_paths: list[Path], grpo_paths: l
         "The fixed search audit compares matching SFT and GRPO greedy completions, includes gains and losses, and is stratified to at most 10 source and 10 fresh tasks per seed.",
         "Equality-suffix normalization and source-solvable-only comparisons are reported in the JSON.",
         "",
+        "### Per-seed greedy comparison (SFT → GRPO)",
+        "",
+        "| Seed | Source SFT | Source GRPO | Source paired gain (95% CI) | Fresh SFT | Fresh GRPO | Fresh paired gain (95% CI) |",
+        "|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for seed in (42, 43, 44):
+        comparisons = result["seeds"][f"seed-{seed}"]["sft_vs_grpo"]
+        cells = []
+        for suite in ("source_confirmation", "fresh_confirmation"):
+            value = comparisons[suite]["greedy"]
+            interval = value["paired_gain_percentile_95"]
+            cells.extend([
+                f"{value['baseline_rate']:.2%}", f"{value['trained_rate']:.2%}",
+                f"{value['paired_gain']:.2%} [{interval[0]:.2%}, {interval[1]:.2%}]",
+            ])
+        lines.append(f"| {seed} | {cells[0]} | {cells[1]} | {cells[2]} | {cells[3]} | {cells[4]} | {cells[5]} |")
+    lines.extend([
+        "",
+        "### Trace-audit counts",
+        "",
+        "| Seed | Audit categories |",
+        "|---:|---|",
+    ])
+    for seed in (42, 43, 44):
+        categories = result["audit_counts"][f"seed-{seed}"]
+        rendered = ", ".join(f"`{category}`: {count}" for category, count in sorted(categories.items())) or "no differing greedy tasks selected"
+        lines.append(f"| {seed} | {rendered} |")
+    aggregate = result["aggregate"]["sft_vs_grpo"]
+    source = aggregate["source_confirmation"]["greedy"]
+    fresh = aggregate["fresh_confirmation"]["greedy"]
+    all_seed_gains_positive = all(
+        result["seeds"][f"seed-{seed}"]["sft_vs_grpo"][suite]["greedy"]["paired_gain"] > 0
+        for seed in (42, 43, 44)
+        for suite in ("source_confirmation", "fresh_confirmation")
+    )
+    both_intervals_positive = all(
+        value["paired_gain_percentile_95"][0] > 0 for value in (source, fresh)
+    )
+    passed = all_seed_gains_positive and both_intervals_positive
+    if passed:
+        conclusion = "The predeclared positive-result criterion is met: greedy paired gains are positive for every seed on both suites, and the three-seed task-bootstrap intervals are positive on both suites. This supports a narrow Countdown improvement claim, not general reasoning."
+    else:
+        conclusion = (
+            "The predeclared positive-result criterion is not met. Across seeds, source greedy pass@1 changed by "
+            f"{source['paired_gain']:+.2%} (95% task-bootstrap interval {source['paired_gain_percentile_95'][0]:+.2%} to {source['paired_gain_percentile_95'][1]:+.2%}), "
+            "and fresh greedy pass@1 changed by "
+            f"{fresh['paired_gain']:+.2%} (95% interval {fresh['paired_gain_percentile_95'][0]:+.2%} to {fresh['paired_gain_percentile_95'][1]:+.2%}). "
+            "Neither interval establishes a positive gain on both suites, and the per-seed changes are not consistently positive. "
+            "This is no demonstrated improvement from this 50-step GRPO follow-up over its SFT initialization; it does not show that GRPO cannot help under other designs."
+        )
+    compute = result["compute"]
+    lines.extend([
+        "",
+        "## Conclusion",
+        "",
+        conclusion,
+        "",
+        "## Compute and observed environment",
+        "",
+        f"Recorded follow-up GPU process time: {compute['total_recorded_process_hours']:.3f} hours of the {compute['followup_cap_hours']:.1f}-hour cap ({compute['remaining_cap_hours']:.3f} hours unused). This sums {compute['evaluation_count']} confirmation evaluators, {compute['signal_probe_count']} signal probes, the integration attempt, and three GRPO process lifetimes from saved summaries/attempt timestamps.",
+        f"All recorded evaluations used `{compute['base_confirmation_device']}` on {compute['gpu_name']} (`{compute['gpu_architecture']}`); observed stack: Torch {compute['torch']}, HIP {compute['hip']}, Transformers {compute['transformers']}, TRL {compute['trl']}, PEFT {compute['peft']}. See `environment.json` for the full WSL manifest and `docs/hardware.md` for the `rocm-smi` caveat.",
+        "",
         "## GRPO training diagnostics",
         "",
         "| Seed | Steps | Rollouts | Mean reward | Positive rate | Mixed groups | All-zero groups | All-one groups | Truncation |",
         "|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
-    ]
+    ])
     for seed in (42, 43, 44):
         diag = result["training"][f"seed-{seed}"]
         lines.append(f"| {seed} | {diag['steps']} | {diag['rollouts']} | {diag['mean_reward']:.3f} | {diag['positive_completion_rate']:.3f} | {diag['mixed_reward_group_rate']:.3f} | {diag['all_zero_group_rate']:.3f} | {diag['all_one_group_rate']:.3f} | {diag['truncation_rate']:.3f} |")

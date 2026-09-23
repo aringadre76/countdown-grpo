@@ -333,3 +333,83 @@ and conditions the aggregate interval on the three observed seeds. The selected
 trace audit has up to 20 disagreements per seed in lexical task-ID order; all
 60 selected records happened to be from the fresh suite because `fresh-` sorts
 before `source-`. The saved raw audit must remain unchanged.
+
+## 11. Frozen SFT-initialized binary-GRPO follow-up
+
+This named study is complete and remains separate from the historical
+no-SFT/binary-GRPO claim. Do not rerun training as part of reproducing the
+report. The exact train-only gate, warm-start smoke, and 50-step commands are
+saved in `signal-s*-t1.summary.json`, `integration-s42/attempt.json`, and
+`grpo-s*/attempt.json`. The immutable design, adapter hashes, training data
+hash, and frozen confirmation tasks are in the same evidence directory.
+
+For a fresh confirmation rerun, use the existing frozen tasks; never regenerate
+them or overwrite the saved output paths. In the following example, set
+`RUN_DIR` to a new directory under `artifacts/rechecks/` and use new experiment
+IDs. Each completion must stay on the project ROCm venv and `cuda` device:
+
+```bash
+RUN_ID=2026-09-23-reproduction
+NEW_EXPERIMENT=qwen35-08b-sft-init-binary-grpo-reproduction
+RUN_DIR="artifacts/rechecks/${RUN_ID}/sft-init-grpo"
+mkdir -p "$RUN_DIR"
+python -m countdown_grpo.evaluate \
+  --model Qwen/Qwen3.5-0.8B-Base \
+  --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
+  --data-dir artifacts/rechecks/2026-09-22-sft-init-grpo/confirmation \
+  --splits source_confirmation fresh_confirmation \
+  --generation-modes greedy sample --samples-per-task 4 \
+  --max-new-tokens 128 --temperature 1.0 --top-p 0.95 \
+  --device cuda --attn-implementation eager --seed 42 \
+  --experiment-id "${NEW_EXPERIMENT}-base" \
+  --output "$RUN_DIR/base-confirmation.jsonl" \
+  --summary-output "$RUN_DIR/base-confirmation.summary.json"
+
+for seed in 42 43 44; do
+  for method in sft grpo; do
+    if [ "$method" = sft ]; then
+      adapter="outputs/learning-sft-pilot-s${seed}/final-adapter"
+    else
+      adapter="outputs/sft-init-grpo-s${seed}/final-adapter"
+    fi
+    python -m countdown_grpo.evaluate \
+      --model Qwen/Qwen3.5-0.8B-Base \
+      --revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 \
+      --adapter-path "$adapter" \
+      --data-dir artifacts/rechecks/2026-09-22-sft-init-grpo/confirmation \
+      --splits source_confirmation fresh_confirmation \
+      --generation-modes greedy sample --samples-per-task 4 \
+      --max-new-tokens 128 --temperature 1.0 --top-p 0.95 \
+      --device cuda --attn-implementation eager --seed 42 \
+      --experiment-id "${NEW_EXPERIMENT}-${method}-s${seed}" \
+      --output "$RUN_DIR/${method}-s${seed}-confirmation.jsonl" \
+      --summary-output "$RUN_DIR/${method}-s${seed}-confirmation.summary.json"
+  done
+done
+```
+
+The saved report was generated from the committed seven evaluator JSONLs with
+10,000 paired task-bootstrap resamples and seed 20260922. To regenerate it,
+choose a new, empty report path; the report tool intentionally refuses to
+overwrite an existing directory:
+
+```bash
+python -m countdown_grpo.sft_grpo_report \
+  --baseline artifacts/rechecks/2026-09-22-sft-init-grpo/base-confirmation.jsonl \
+  --sft artifacts/rechecks/2026-09-22-sft-init-grpo/sft-s42-confirmation.jsonl \
+    artifacts/rechecks/2026-09-22-sft-init-grpo/sft-s43-confirmation.jsonl \
+    artifacts/rechecks/2026-09-22-sft-init-grpo/sft-s44-confirmation.jsonl \
+  --grpo artifacts/rechecks/2026-09-22-sft-init-grpo/grpo-s42-confirmation.jsonl \
+    artifacts/rechecks/2026-09-22-sft-init-grpo/grpo-s43-confirmation.jsonl \
+    artifacts/rechecks/2026-09-22-sft-init-grpo/grpo-s44-confirmation.jsonl \
+  --freeze artifacts/rechecks/2026-09-22-sft-init-grpo/frozen-design.json \
+  --evidence-dir artifacts/rechecks/2026-09-22-sft-init-grpo \
+  --output-dir artifacts/rechecks/<NEW_RUN>/report
+```
+
+Use `.venv/bin/python` for report-only regeneration and CPU tests if it has the
+project dev dependencies. No Torch/TRL installation is required for reporting.
+The exact saved environment, start/end times, device peaks, and command argv
+remain in the evaluation summaries and GRPO attempt/config files. The current
+result and 5.064-hour process accounting are summarized in the
+[follow-up evidence guide](../artifacts/rechecks/2026-09-22-sft-init-grpo/README.md).

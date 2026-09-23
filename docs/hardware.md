@@ -64,3 +64,25 @@ or LoRA target selection, and is recorded in every GPU run configuration.
 Before another run, record a fresh manifest, inspect the named llama.cpp
 server and GPU occupancy, run the Qwen preflight, and retain the exact output.
 Do not infer training compatibility from an unrelated HIP inference stack.
+
+## SFT-initialized GRPO follow-up
+
+The frozen follow-up completed on the same WSL2 ROCm environment. Its saved
+training `run-config.json` files identify the device as AMD Radeon RX 7900 XTX,
+`gfx1100`, with Torch `2.13.0+rocm7.14.0` and HIP `7.14.60850`. The seven
+confirmation evaluator summaries record `device: cuda`; each adapter run had
+1,892,670,976 bytes peak allocated and 1,981,808,640 bytes peak reserved, and
+all six adapter evaluations completed 2,560 records without truncation. The
+base confirmation used 1,851,776,512 peak allocated bytes.
+
+Observed follow-up GPU process time was 18,229.856 seconds (5.064 hours) out
+of the predeclared six-hour cap. That total includes seven evaluators, three
+train-only signal probes, one integration attempt, and three 50-step GRPO
+processes. The generated accounting is in
+[`comparison.json`](../artifacts/rechecks/2026-09-22-sft-init-grpo/report-final/comparison.json);
+the per-command versions, exact arguments, start/finish times, and memory are
+in the adjacent summary and attempt JSON files. No llama.cpp process was
+observed before the runs. As in the earlier snapshot, `rocm-smi` can still
+print `Driver not initialized (amdgpu not found in modules)` in WSL; the
+Torch `cuda` device records and successful model executions are the evidence
+of this path, not the `rocm-smi` output alone.

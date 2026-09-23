@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Completed the frozen three-seed SFT-initialized binary-GRPO follow-up on the
+  RX 7900 XTX, including seven confirmation evaluations and 5.064 recorded GPU
+  process-hours of the six-hour cap. The paired report found no demonstrated
+  improvement over SFT on both frozen suites. Saved all raw completions,
+  summaries, audit traces, report, and plot; updated the README, hardware,
+  reproduction, lessons, next-step, and agent-routing documentation.
+- Enhanced the follow-up report generator to state the predeclared result
+  criterion, per-seed source/fresh pass@1 changes, audit categories, observed
+  environment, and compute budget from saved evidence.
 - Froze a separately labeled SFT-initialized binary-GRPO follow-up, including
   adapter hashes, train-only signal gates, a new source/fresh confirmation
   design, pinned TRL batch semantics, and a six-hour hard follow-up budget.
