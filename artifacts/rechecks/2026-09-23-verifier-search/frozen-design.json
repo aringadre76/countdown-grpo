@@ -1,0 +1,82 @@
+{
+  "status": "frozen",
+  "frozen_at": "2026-09-23T02:55:18Z",
+  "design_commit": "d98bca7db570f85a9ea654df8137319e5fa737f4",
+  "experiment_id": "qwen35-08b-verifier-filtered-search-2026-09-23",
+  "method": "inference-time ordered exact-verifier filter over one greedy and eight sampled candidates; no training",
+  "model_id": "Qwen/Qwen3.5-0.8B-Base",
+  "model_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "arithmetic_contract": {
+    "operators": ["+", "-", "*", "/"],
+    "parentheses": true,
+    "every_input_number_exactly_once": true,
+    "exact_rational_checking": true,
+    "integer_intermediate_and_final_values": true,
+    "primary_reward": "1.0 only for a verifier-valid exact target solution; otherwise 0.0",
+    "generated_text_execution": false
+  },
+  "policies": {
+    "base": {"adapter_path": null},
+    "sft_42": {
+      "adapter_path": "outputs/learning-sft-pilot-s42/final-adapter",
+      "adapter_model_sha256": "232bbc0935ae610bf20a8b673550acdf6c1822b7e81f6020fb9bc8075ab3e142"
+    },
+    "sft_43": {
+      "adapter_path": "outputs/learning-sft-pilot-s43/final-adapter",
+      "adapter_model_sha256": "108a9817d04c43060c3bddaf51a5a2a433a39b7af70b588f5ff56ab86b9df15d"
+    },
+    "sft_44": {
+      "adapter_path": "outputs/learning-sft-pilot-s44/final-adapter",
+      "adapter_model_sha256": "445b506eb99144b4427e0acd1b81b568ef9b4ceed91e7968cfc3dca83d7216ed"
+    }
+  },
+  "confirmation": {
+    "source_tasks": 256,
+    "fresh_tasks": 256,
+    "source_split": "source_test, excluding all previously observed canonical keys",
+    "fresh_tasks_oracle_solvable": true,
+    "exclude_all_prior_artifact_task_identities": true,
+    "exclude_source_train_dev_and_fresh_test": true,
+    "oracle_witnesses_in_prompts": false,
+    "candidate_modes": ["greedy", "sample"],
+    "sampled_completions_per_task": 8,
+    "generation_seed_base": 20260923,
+    "generation_config": {
+      "max_new_tokens": 128,
+      "temperature": 1.0,
+      "top_p": 0.95,
+      "prompt_format": "raw",
+      "attention": "eager",
+      "device": "cuda"
+    },
+    "candidate_order": "greedy first, then sample_index ascending",
+    "selection": "first exact-verifier-valid candidate; otherwise no solution",
+    "compare_same_generation_seed_schedule_across_policies": true,
+    "metrics": ["greedy_pass_at_1", "sample_pass_at_4", "sample_pass_at_8", "verifier_search_at_1", "verifier_search_at_5", "verifier_search_at_9"],
+    "paired_bootstrap": {
+      "resamples": 10000,
+      "seed": 20260923,
+      "unit": "task",
+      "report_per_sft_seed_and_three_seed_mean": true
+    },
+    "checkpoint_selection_uses_confirmation": false,
+    "hyperparameter_tuning_on_confirmation": false
+  },
+  "positive_result_criterion": {
+    "all_three_sft_seeds_improve_search_at_9_over_greedy_on_source_and_fresh": true,
+    "three_seed_paired_95_percent_task_bootstrap_interval_positive_on_both_suites": true,
+    "sft_vs_base_comparison_uses_same_candidate_budget": true
+  },
+  "budget": {
+    "hard_cap_gpu_process_hours": 6.0,
+    "policy_count": 4,
+    "tasks_per_policy": 512,
+    "completions_per_task": 9,
+    "total_expected_completions": 18432,
+    "prior_completions": 17920,
+    "prior_evaluator_wall_seconds": 17002.174078482,
+    "estimated_hours_from_prior_throughput": 4.86,
+    "includes_model_loads_and_all_evaluator_wall_time": true,
+    "training_hours": 0.0
+  }
+}
